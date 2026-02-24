@@ -1,0 +1,58 @@
+{
+  "name": "@pqwallet/snap",
+  "version": "1.0.0",
+  "description": "Post-quantum ML-DSA (Dilithium) signing snap for MetaMask",
+  "keywords": [
+    "metamask",
+    "snap",
+    "post-quantum",
+    "dilithium",
+    "ml-dsa",
+    "pqc",
+    "wallet"
+  ],
+  "homepage": "https://github.com/pqwallet/pq-snap",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pqwallet/pq-snap.git"
+  },
+  "license": "MIT",
+  "main": "dist/bundle.js",
+  "files": [
+    "dist/",
+    "snap.manifest.json"
+  ],
+  "scripts": {
+    "build": "mm-snap build",
+    "build:clean": "rm -rf dist && bun run build",
+    "serve": "mm-snap serve",
+    "watch": "mm-snap watch",
+    "lint": "biome check src",
+    "lint:fix": "biome check --write src",
+    "format": "biome format --write src",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@noble/hashes": "^1.4.0",
+    "@noble/post-quantum": "^0.5.4",
+    "viem": "^2.45.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.0",
+    "@metamask/snaps-cli": "^6.0.0",
+    "@metamask/snaps-sdk": "^6.0.0",
+    "@types/node": "^20.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

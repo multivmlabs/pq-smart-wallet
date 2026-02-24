@@ -1,0 +1,24 @@
+[package]
+name = "ml-dsa-test"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+fips204 = { version = "0.4.6", default-features = false, features = [
+  "ml-dsa-65",
+] }
+hex = "0.4.3"
+ml-dsa = "0.1.0-rc.7"
+rand = "0.10.0"
+
+[dev-dependencies]
+criterion = { version = "0.8.2", features = ["html_reports"] }
+hex = "0.4.3"
+rand = "0.10.0"
+rand_chacha = "0.3.1"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+
+[[bench]]
+name = "ml_dsa_bench"
+harness = false
