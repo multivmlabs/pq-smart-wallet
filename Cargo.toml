@@ -1,0 +1,3 @@
+[workspace]
+members = ["pq-validator", "scripts/cli"]
+resolver = "2"

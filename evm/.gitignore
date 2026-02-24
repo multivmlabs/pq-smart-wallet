@@ -1,0 +1,14 @@
+# Foundry compilation
+cache/
+out/
+
+# Broadcast logs (local chain + dry runs)
+/broadcast
+/broadcast/*/31337/
+/broadcast/**/dry-run/
+
+# Generated forge docs
+docs/
+
+# Environment (also covered by root, but defense in depth)
+.env

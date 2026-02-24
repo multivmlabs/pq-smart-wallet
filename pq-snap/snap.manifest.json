@@ -1,0 +1,30 @@
+{
+  "version": "1.0.0",
+  "description": "Post-quantum ML-DSA (Dilithium) signatures for Ethereum smart accounts",
+  "proposedName": "PQ Wallet",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pqwallet/pq-snap.git"
+  },
+  "source": {
+    "shasum": "uj/fEG/aJ5wjnNW7n4f6PCqDkvl3bL5hwmyEYZ4Ae/M=",
+    "location": {
+      "npm": {
+        "filePath": "dist/bundle.js",
+        "packageName": "@pqwallet/snap",
+        "registry": "https://registry.npmjs.org/"
+      }
+    }
+  },
+  "initialPermissions": {
+    "snap_dialog": {},
+    "snap_manageState": {},
+    "snap_getEntropy": {},
+    "endowment:rpc": {
+      "dapps": true,
+      "snaps": false
+    }
+  },
+  "platformVersion": "6.24.0",
+  "manifestVersion": "0.1"
+}

@@ -1,0 +1,4560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PQ Wallet - MultiVM Labs</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-card: #111111;
+      --border-color: #1a1a1a;
+      --border-highlight: #2a2a2a;
+      --text-primary: #ffffff;
+      --text-secondary: #888888;
+      --text-muted: #555555;
+      --success: #22c55e;
+      --error: #ef4444;
+      --warning: #f59e0b;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .grid-bg {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 40%;
+      height: 100%;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .grid-bg::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: var(--border-color);
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      border-right: 1px solid var(--border-color);
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .logo-icon {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3px;
+    }
+
+    .logo-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--text-primary);
+      border-radius: 50%;
+    }
+
+    .logo-text {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    .tagline {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+    }
+
+    /* Connection */
+    .connection {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+
+    .connection-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--error);
+    }
+
+    .status-dot.connected {
+      background: var(--success);
+    }
+
+    .status-text {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 10px 16px;
+      border: 1px solid var(--border-highlight);
+      background: transparent;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+    }
+
+    .btn:hover {
+      background: var(--text-primary);
+      color: var(--bg-primary);
+      border-color: var(--text-primary);
+    }
+
+    .btn-primary {
+      border-color: var(--text-primary);
+    }
+
+    .btn-small {
+      padding: 8px 12px;
+      font-size: 10px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-row .btn {
+      flex: 1;
+    }
+
+    /* Nav */
+    .nav {
+      flex: 1;
+    }
+
+    .nav-section {
+      margin-bottom: 20px;
+    }
+
+    .nav-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .nav-title {
+      font-size: 10px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .nav-item {
+      display: block;
+      padding: 8px 12px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+      border-left: 2px solid transparent;
+      margin-left: -12px;
+      padding-left: 22px;
+    }
+
+    .nav-item:hover {
+      color: var(--text-primary);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .nav-item.active {
+      color: var(--text-primary);
+      border-left-color: var(--text-primary);
+      background: rgba(255,255,255,0.03);
+    }
+
+    /* Keypair Info */
+    .keypair-info {
+      margin-top: auto;
+      padding-top: 20px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .keypair-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .keypair-value {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 11px;
+      color: var(--text-secondary);
+      word-break: break-all;
+    }
+
+    .keypair-value.none {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* Main Content */
+    .main {
+      padding: 32px 40px;
+      max-width: 720px;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .page-description {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .card-description {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 12px;
+      transition: border-color 0.15s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--border-highlight);
+    }
+
+    .form-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    textarea.form-input {
+      min-height: 70px;
+      resize: vertical;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .form-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* Result */
+    .result {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      padding: 14px;
+      margin-top: 16px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 11px;
+      line-height: 1.6;
+      max-height: 200px;
+      overflow-y: auto;
+      word-break: break-all;
+      display: none;
+    }
+
+    .result.visible {
+      display: block;
+    }
+
+    /* Code blocks in docs */
+    .code-block {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      padding: 16px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre;
+      color: var(--text-secondary);
+    }
+
+    .result.success {
+      border-color: var(--success);
+    }
+
+    .result.error {
+      border-color: var(--error);
+      color: var(--error);
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .stat {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 16px;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    .stat-value.mono {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 14px;
+    }
+
+    /* Log */
+    .log {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 11px;
+      height: 200px;
+      overflow-y: auto;
+    }
+
+    .log-entry {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      gap: 12px;
+    }
+
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+
+    .log-time {
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .log-message {
+      color: var(--text-secondary);
+    }
+
+    .log-entry.success .log-message {
+      color: var(--success);
+    }
+
+    .log-entry.error .log-message {
+      color: var(--error);
+    }
+
+    /* Dapp Simulation */
+    .dapp-preview {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .dapp-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .dapp-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--border-highlight);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .dapp-name {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .dapp-url {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .tx-details {
+      margin-bottom: 16px;
+    }
+
+    .tx-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 12px;
+    }
+
+    .tx-row:last-child {
+      border-bottom: none;
+    }
+
+    .tx-label {
+      color: var(--text-muted);
+    }
+
+    .tx-value {
+      font-family: 'SF Mono', Monaco, monospace;
+      color: var(--text-primary);
+    }
+
+    /* Warning */
+    .warning-box {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid var(--warning);
+      padding: 14px;
+      margin-bottom: 20px;
+      font-size: 12px;
+      color: var(--warning);
+    }
+
+    .warning-title {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-primary);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-highlight);
+    }
+
+    /* Onboarding Overlay */
+    .onboarding-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(10, 10, 10, 0.95);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      transition: opacity 0.4s ease;
+    }
+
+    .onboarding-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .onboarding-progress {
+      position: absolute;
+      top: 40px;
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .onboarding-progress.hidden {
+      display: none;
+    }
+
+    .progress-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid var(--border-highlight);
+      background: transparent;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .progress-dot.active {
+      border-color: var(--text-primary);
+      background: var(--text-primary);
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+    }
+
+    .progress-dot.completed {
+      border-color: var(--success);
+      background: var(--success);
+      box-shadow: none;
+    }
+
+    .progress-line {
+      width: 48px;
+      height: 2px;
+      background: var(--border-highlight);
+      transition: background 0.3s ease;
+    }
+
+    .progress-line.completed {
+      background: var(--success);
+    }
+
+    .progress-label {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      transition: color 0.3s ease;
+    }
+
+    .progress-dot.active .progress-label,
+    .progress-dot.completed .progress-label {
+      color: var(--text-secondary);
+    }
+
+    .onboarding-step {
+      display: none;
+      max-width: 480px;
+      width: 100%;
+      padding: 0 24px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .onboarding-step.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    @keyframes scaleIn {
+      from { transform: scale(0); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .onboarding-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 40px;
+    }
+
+    .ob-title {
+      font-size: 22px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .ob-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+
+    .ob-features {
+      list-style: none;
+      margin-bottom: 32px;
+    }
+
+    .ob-features li {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 13px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ob-features li:last-child {
+      border-bottom: none;
+    }
+
+    .ob-feature-icon {
+      color: var(--success);
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .ob-footer {
+      margin-top: 20px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .ob-footer a {
+      color: var(--text-secondary);
+      text-decoration: underline;
+    }
+
+    .ob-footer a:hover {
+      color: var(--text-primary);
+    }
+
+    .ob-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+      padding: 12px 16px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .ob-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .ob-status-dot.detected { background: var(--success); }
+    .ob-status-dot.not-detected { background: var(--error); }
+    .ob-status-dot.generating { background: var(--warning); animation: pulse 1s infinite; }
+
+    .ob-btn {
+      display: block;
+      width: 100%;
+      padding: 14px 20px;
+      border: 1px solid var(--text-primary);
+      background: var(--text-primary);
+      color: var(--bg-primary);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+    }
+
+    .ob-btn:hover {
+      background: transparent;
+      color: var(--text-primary);
+    }
+
+    .ob-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .ob-btn:disabled:hover {
+      background: var(--text-primary);
+      color: var(--bg-primary);
+    }
+
+    .ob-btn-secondary {
+      background: transparent;
+      color: var(--text-secondary);
+      border-color: var(--border-highlight);
+      margin-top: 10px;
+    }
+
+    .ob-btn-secondary:hover {
+      color: var(--text-primary);
+      border-color: var(--text-primary);
+      background: transparent;
+    }
+
+    .ob-btn-secondary.primary {
+      background: var(--text-primary);
+      color: var(--bg-primary);
+      border-color: var(--text-primary);
+    }
+
+    .ob-btn-secondary.primary:hover {
+      background: transparent;
+      color: var(--text-primary);
+    }
+
+    .ob-disclosure {
+      margin-top: 20px;
+    }
+
+    .ob-disclosure summary {
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 8px 0;
+      list-style: none;
+      transition: color 0.15s;
+    }
+
+    .ob-disclosure summary::-webkit-details-marker { display: none; }
+
+    .ob-disclosure summary::before {
+      content: '+ ';
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    .ob-disclosure[open] summary::before {
+      content: '- ';
+    }
+
+    .ob-disclosure summary:hover {
+      color: var(--text-secondary);
+    }
+
+    .ob-disclosure-content {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      padding: 12px 0;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .ob-keygen-visual {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+      padding: 16px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    .ob-keygen-icon {
+      width: 40px;
+      height: 40px;
+      border: 2px solid var(--border-highlight);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+      transition: all 0.3s;
+    }
+
+    .ob-keygen-icon.generating {
+      border-color: var(--warning);
+      animation: pulse 1s infinite;
+    }
+
+    .ob-keygen-icon.done {
+      border-color: var(--success);
+      animation: scaleIn 0.3s ease;
+    }
+
+    .ob-keygen-text {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .ob-keygen-pk {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      word-break: break-all;
+    }
+
+    .ob-sign-preview {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+
+    .ob-sign-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      font-size: 12px;
+    }
+
+    .ob-sign-label {
+      color: var(--text-muted);
+    }
+
+    .ob-sign-value {
+      font-family: 'SF Mono', Monaco, monospace;
+      color: var(--text-secondary);
+    }
+
+    /* Done step */
+    .ob-checkmark {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--success);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      animation: scaleIn 0.4s ease;
+    }
+
+    .ob-checkmark svg {
+      width: 32px;
+      height: 32px;
+      stroke: var(--bg-primary);
+      stroke-width: 3;
+      fill: none;
+    }
+
+    .ob-done-title {
+      font-size: 22px;
+      font-weight: 500;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .ob-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .ob-stat {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      padding: 14px;
+      text-align: center;
+    }
+
+    .ob-stat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .ob-stat-value {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--success);
+    }
+
+    .ob-next-links {
+      margin-bottom: 28px;
+    }
+
+    .ob-next-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .ob-next-link {
+      display: block;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-bottom: 1px solid var(--border-color);
+      transition: color 0.15s;
+    }
+
+    .ob-next-link:last-child {
+      border-bottom: none;
+    }
+
+    .ob-next-link:hover {
+      color: var(--text-primary);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 12px 24px;
+      font-size: 12px;
+      z-index: 200;
+      opacity: 0;
+      transition: all 0.3s ease;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast.error {
+      border-color: var(--error);
+      color: var(--error);
+    }
+
+    /* Nav disabled state */
+    .nav-item.disabled {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    /* Reset onboarding link */
+    .reset-onboarding {
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+      margin-top: 12px;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .reset-onboarding:hover {
+      color: var(--text-secondary);
+    }
+
+    /* Backup password input in onboarding */
+    .ob-form-group {
+      margin-bottom: 16px;
+    }
+
+    .ob-form-label {
+      display: block;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .ob-form-input {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 12px;
+      transition: border-color 0.15s;
+    }
+
+    .ob-form-input:focus {
+      outline: none;
+      border-color: var(--border-highlight);
+    }
+
+    .ob-form-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* ERC-4337 Deploy Steps */
+    .deploy-steps {
+      margin-bottom: 20px;
+    }
+
+    .deploy-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 12px;
+      color: var(--text-muted);
+      transition: color 0.3s;
+    }
+
+    .deploy-step:last-child {
+      border-bottom: none;
+    }
+
+    .deploy-step .step-indicator {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid var(--border-highlight);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+      transition: all 0.3s;
+    }
+
+    .deploy-step.active {
+      color: var(--text-primary);
+    }
+
+    .deploy-step.active .step-indicator {
+      border-color: var(--warning);
+      animation: pulse 1s infinite;
+    }
+
+    .deploy-step.done {
+      color: var(--success);
+    }
+
+    .deploy-step.done .step-indicator {
+      border-color: var(--success);
+      background: var(--success);
+      color: var(--bg-primary);
+      animation: none;
+    }
+
+    /* Setup Banner */
+    .setup-banner {
+      background: rgba(34, 197, 94, 0.08);
+      border: 1px solid rgba(34, 197, 94, 0.25);
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      font-size: 12px;
+      color: var(--success);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Select dropdown */
+    select.form-input {
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23555' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+      cursor: pointer;
+    }
+
+    /* Transaction history entries */
+    .tx-history-entry {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .tx-history-entry:hover {
+      border-color: var(--border-highlight);
+    }
+
+    .tx-history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .tx-history-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .tx-history-time {
+      color: var(--text-muted);
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 11px;
+    }
+
+    .tx-history-value {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .tx-history-to {
+      color: var(--text-secondary);
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 11px;
+    }
+
+    .tx-history-block {
+      color: var(--text-muted);
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 11px;
+    }
+
+    .tx-history-detail {
+      display: none;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .tx-history-entry.expanded .tx-history-detail {
+      display: block;
+    }
+
+    .tx-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    /* Balance bar for send page */
+    .balance-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      font-size: 12px;
+    }
+
+    .balance-bar-value {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-weight: 500;
+    }
+
+    .balance-bar-address {
+      font-family: 'SF Mono', Monaco, monospace;
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    /* Wallet View */
+    .wallet-view {
+      max-width: 420px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 0;
+    }
+
+    .wallet-network {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 28px;
+      margin-bottom: 24px;
+      cursor: default;
+    }
+
+    .wallet-network-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    .wallet-account {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 24px;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+
+    .wallet-account:hover {
+      color: var(--text-secondary);
+    }
+
+    .wallet-account-addr {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .wallet-copy-icon {
+      font-size: 12px;
+      color: var(--text-muted);
+      transition: color 0.15s;
+    }
+
+    .wallet-account:hover .wallet-copy-icon {
+      color: var(--text-primary);
+    }
+
+    .wallet-balance {
+      font-size: 48px;
+      font-weight: 500;
+      font-family: 'SF Mono', Monaco, monospace;
+      text-align: center;
+      margin-bottom: 4px;
+      letter-spacing: -1px;
+    }
+
+    .wallet-balance-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .wallet-shield {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border: 1px solid rgba(34, 197, 94, 0.2);
+      border-radius: 16px;
+      background: rgba(34, 197, 94, 0.05);
+      font-size: 11px;
+      color: var(--success);
+      margin-bottom: 20px;
+      letter-spacing: 0.5px;
+    }
+
+    .wallet-shield svg {
+      width: 12px;
+      height: 12px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    .wallet-assets {
+      width: 100%;
+      margin-bottom: 32px;
+    }
+
+    .wallet-assets-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+
+    .wallet-assets-title {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .wallet-assets-total {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .wallet-asset-row {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      border: 1px solid var(--border-color);
+      border-bottom: none;
+      transition: background 0.1s;
+    }
+
+    .wallet-asset-row:first-of-type {
+      border-radius: 8px 8px 0 0;
+    }
+
+    .wallet-asset-row:last-of-type {
+      border-bottom: 1px solid var(--border-color);
+      border-radius: 0 0 8px 8px;
+    }
+
+    .wallet-asset-row:only-of-type {
+      border-radius: 8px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .wallet-asset-row:hover {
+      background: rgba(255,255,255,0.02);
+    }
+
+    .wallet-asset-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+
+    .wallet-asset-info {
+      flex: 1;
+    }
+
+    .wallet-asset-name {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .wallet-asset-symbol {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .wallet-asset-amounts {
+      text-align: right;
+    }
+
+    .wallet-asset-balance {
+      font-size: 13px;
+      font-weight: 500;
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    .wallet-asset-usd {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    .wallet-actions {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .wallet-action-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 36px;
+      border: 1px solid var(--border-highlight);
+      border-radius: 24px;
+      background: transparent;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .wallet-action-btn:hover {
+      background: var(--text-primary);
+      color: var(--bg-primary);
+      border-color: var(--text-primary);
+    }
+
+    .wallet-action-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .wallet-action-btn:disabled:hover {
+      background: transparent;
+      color: var(--text-primary);
+      border-color: var(--border-highlight);
+    }
+
+    .wallet-activity {
+      width: 100%;
+      margin-bottom: 24px;
+    }
+
+    .wallet-activity-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .wallet-tx {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 14px 16px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .wallet-tx:hover {
+      border-color: var(--border-highlight);
+    }
+
+    .wallet-tx-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .wallet-tx-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .wallet-tx-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid var(--border-highlight);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .wallet-tx-icon.send {
+      color: var(--error);
+    }
+
+    .wallet-tx-icon.fund {
+      color: var(--success);
+    }
+
+    .wallet-tx-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .wallet-tx-type {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .wallet-tx-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    .wallet-tx-right {
+      text-align: right;
+    }
+
+    .wallet-tx-amount {
+      font-size: 13px;
+      font-weight: 500;
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    .wallet-tx-amount.negative {
+      color: var(--text-primary);
+    }
+
+    .wallet-tx-amount.positive {
+      color: var(--success);
+    }
+
+    .wallet-tx-date {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .wallet-tx-detail {
+      display: none;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .wallet-tx.expanded .wallet-tx-detail {
+      display: block;
+    }
+
+    .wallet-pq-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 16px;
+      font-size: 11px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-color);
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .wallet-detail-card {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 20px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .wallet-detail-card.visible {
+      display: block;
+    }
+
+    .fund-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 8px;
+      display: none;
+      z-index: 50;
+      min-width: 160px;
+    }
+
+    .fund-dropdown.visible {
+      display: block;
+    }
+
+    .fund-dropdown-btn {
+      display: block;
+      width: 100%;
+      padding: 8px 12px;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s;
+    }
+
+    .fund-dropdown-btn:hover {
+      background: rgba(255,255,255,0.05);
+      color: var(--text-primary);
+    }
+
+    .wallet-send-flow {
+      width: 100%;
+    }
+
+    .wallet-send-back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      margin-bottom: 16px;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      transition: color 0.15s;
+    }
+
+    .wallet-send-back:hover {
+      color: var(--text-primary);
+    }
+
+    .wallet-empty {
+      text-align: center;
+      padding: 32px 20px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    /* Wallet Mode */
+    body.wallet-mode .grid-bg {
+      display: none;
+    }
+
+    body.wallet-mode .sidebar {
+      display: none;
+    }
+
+    body.wallet-mode .wallet-sidebar {
+      display: flex;
+    }
+
+    body.wallet-mode .wallet-view {
+      max-width: 100%;
+      padding: 0;
+    }
+
+    /* Wallet Sidebar */
+    .wallet-sidebar {
+      display: none;
+      border-right: 1px solid var(--border-color);
+      padding: 32px 24px;
+      flex-direction: column;
+    }
+
+    .wallet-sidebar .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .wallet-sidebar .tagline {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+    }
+
+    .wallet-sidebar-account {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 14px 16px;
+      margin-bottom: 24px;
+    }
+
+    .wallet-sidebar-network {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--success);
+      margin-bottom: 8px;
+    }
+
+    .wallet-sidebar-account-addr {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 11px;
+      color: var(--text-secondary);
+      word-break: break-all;
+    }
+
+    .wallet-sidebar-account-addr.none {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .wallet-sidebar-balance {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 14px;
+      font-weight: 500;
+      margin-top: 8px;
+    }
+
+    /* Developer Dropdown */
+    .dev-disclosure {
+      margin-top: 8px;
+      border-top: 1px solid var(--border-color);
+      padding-top: 8px;
+    }
+
+    .dev-disclosure summary {
+      font-size: 10px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 6px 0;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+    }
+
+    .dev-disclosure summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .dev-disclosure summary::after {
+      content: '▸';
+      font-size: 9px;
+      transition: transform 0.15s;
+    }
+
+    .dev-disclosure[open] summary::after {
+      transform: rotate(90deg);
+    }
+
+    .dev-disclosure .nav-item {
+      font-size: 12px;
+      padding: 6px 12px;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .grid-bg {
+        display: none;
+      }
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      .ob-stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Onboarding Overlay -->
+  <div class="onboarding-overlay" id="onboardingOverlay">
+    <!-- Progress Bar -->
+    <div class="onboarding-progress hidden" id="onboardingProgress">
+      <div class="progress-dot" id="prog-connect">
+        <span class="progress-label">Connect</span>
+      </div>
+      <div class="progress-line" id="line-1"></div>
+      <div class="progress-dot" id="prog-keygen">
+        <span class="progress-label">Create Key</span>
+      </div>
+      <div class="progress-line" id="line-2"></div>
+      <div class="progress-dot" id="prog-backup">
+        <span class="progress-label">Backup</span>
+      </div>
+      <div class="progress-line" id="line-3"></div>
+      <div class="progress-dot" id="prog-sign">
+        <span class="progress-label">First Sign</span>
+      </div>
+      <div class="progress-line" id="line-4"></div>
+      <div class="progress-dot" id="prog-deploy">
+        <span class="progress-label">Deploy</span>
+      </div>
+    </div>
+
+    <!-- Welcome -->
+    <div class="onboarding-step" id="ob-welcome">
+      <div class="onboarding-card">
+        <div class="ob-title">Your assets, quantum-safe</div>
+        <div class="ob-subtitle">PQ Wallet creates a smart wallet that only accepts post-quantum signatures. Even if your MetaMask private key is compromised, no one can move your assets — ECDSA signatures are rejected.</div>
+        <ul class="ob-features">
+          <li><span class="ob-feature-icon">&#10003;</span> Smart wallet only accepts ML-DSA-65 (FIPS 204)</li>
+          <li><span class="ob-feature-icon">&#10003;</span> ECDSA compromise cannot touch your assets</li>
+          <li><span class="ob-feature-icon">&#10003;</span> Kernel account (ERC-4337 + ERC-7579)</li>
+        </ul>
+        <button class="ob-btn" onclick="advanceOnboarding('connect')">Get Started</button>
+        <div class="ob-footer">Requires <a href="https://metamask.io/flask/" target="_blank">MetaMask Flask</a> with Snaps support</div>
+      </div>
+    </div>
+
+    <!-- Step 1: Connect -->
+    <div class="onboarding-step" id="ob-connect">
+      <div class="onboarding-card">
+        <div class="ob-title">Install PQ Snap</div>
+        <div class="ob-subtitle">Install the signing plugin into MetaMask. This gives your browser post-quantum signing capability.</div>
+        <div class="ob-status" id="ob-metamask-status">
+          <div class="ob-status-dot not-detected" id="ob-mm-dot"></div>
+          <span id="ob-mm-text">Checking for MetaMask...</span>
+        </div>
+        <button class="ob-btn" id="ob-connect-btn" onclick="onboardingConnect()">Connect PQ Wallet</button>
+        <details class="ob-disclosure">
+          <summary>What happens when I connect?</summary>
+          <div class="ob-disclosure-content">
+            MetaMask will ask you to approve the PQ Wallet snap. Snaps run in a sandboxed environment with no network access &mdash; your keys are generated and stored entirely within MetaMask's encrypted state. The snap can only sign data you explicitly approve.
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Step 2: Create Key -->
+    <div class="onboarding-step" id="ob-keygen">
+      <div class="onboarding-card">
+        <div class="ob-title">Generate PQ keypair</div>
+        <div class="ob-subtitle">Create an ML-DSA-65 keypair inside MetaMask. This key will be the only way to authorize transactions on your smart wallet.</div>
+        <div class="ob-keygen-visual" id="ob-keygen-visual">
+          <div class="ob-keygen-icon" id="ob-keygen-icon">&#128273;</div>
+          <div>
+            <div class="ob-keygen-text" id="ob-keygen-text">Ready to generate</div>
+            <div class="ob-keygen-pk" id="ob-keygen-pk"></div>
+          </div>
+        </div>
+        <button class="ob-btn" id="ob-keygen-btn" onclick="onboardingKeygen()">Create Key</button>
+        <details class="ob-disclosure">
+          <summary>Technical details</summary>
+          <div class="ob-disclosure-content">
+            Algorithm: ML-DSA-65 (Dilithium)<br>
+            Standard: FIPS 204<br>
+            Security: NIST Level 3 (~192-bit)<br>
+            Public key: 1,952 bytes<br>
+            Secret key: 4,032 bytes<br>
+            Signature: ~3,309 bytes
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Step 3: Backup -->
+    <div class="onboarding-step" id="ob-backup">
+      <div class="onboarding-card">
+        <div class="ob-title">Back up your key</div>
+        <div class="ob-subtitle">This key is the only way to access your smart wallet. Export an encrypted backup — if you lose this key, your assets are locked forever.</div>
+        <div class="ob-form-group">
+          <label class="ob-form-label">Backup Password</label>
+          <input type="password" class="ob-form-input" id="ob-backup-password" placeholder="Minimum 8 characters">
+        </div>
+        <button class="ob-btn" id="ob-backup-btn" onclick="onboardingBackup()">Export Backup</button>
+        <button class="ob-btn ob-btn-secondary" id="ob-backup-skip" onclick="advanceOnboarding('sign')">I'll do this later</button>
+      </div>
+    </div>
+
+    <!-- Step 4: First Signature -->
+    <div class="onboarding-step" id="ob-sign">
+      <div class="onboarding-card">
+        <div class="ob-title">Test your signature</div>
+        <div class="ob-subtitle">Sign a test message to verify your PQ key works. This is the same signature type your smart wallet will require for every transaction.</div>
+        <div class="ob-sign-preview">
+          <div class="ob-sign-row">
+            <span class="ob-sign-label">Message</span>
+            <span class="ob-sign-value">Hello, post-quantum world!</span>
+          </div>
+          <div class="ob-sign-row">
+            <span class="ob-sign-label">Algorithm</span>
+            <span class="ob-sign-value">ML-DSA-65</span>
+          </div>
+          <div class="ob-sign-row">
+            <span class="ob-sign-label">Signature size</span>
+            <span class="ob-sign-value">~3,309 bytes</span>
+          </div>
+        </div>
+        <button class="ob-btn" id="ob-sign-btn" onclick="onboardingSign()">Sign Test Message</button>
+        <div class="ob-status" id="ob-sign-result" style="display: none;">
+          <div class="ob-status-dot detected"></div>
+          <span id="ob-sign-text">Signed successfully</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5: Deploy Smart Account -->
+    <div class="onboarding-step" id="ob-deploy">
+      <div class="onboarding-card">
+        <div class="ob-title">Deploy your smart wallet</div>
+        <div class="ob-subtitle">Deploy a Kernel smart wallet that only accepts your ML-DSA-65 signatures. Transfer your assets here — they'll be unreachable by ECDSA. All on-chain parts are simulated.</div>
+        <div class="form-group">
+          <label class="form-label">Network</label>
+          <select class="form-input" id="ob-deploy-network">
+            <option value="11155111">Sepolia</option>
+            <option value="11155420">OP Sepolia</option>
+            <option value="84532">Base Sepolia</option>
+          </select>
+        </div>
+        <div class="deploy-steps" id="ob-deploy-steps" style="display: none;">
+          <div class="deploy-step" id="ob-deploy-step-1">
+            <div class="step-indicator">1</div>
+            <span>Computing counterfactual address via KernelFactory...</span>
+          </div>
+          <div class="deploy-step" id="ob-deploy-step-2">
+            <div class="step-indicator">2</div>
+            <span>Building initCode with ML-DSA-65 validator plugin...</span>
+          </div>
+          <div class="deploy-step" id="ob-deploy-step-3">
+            <div class="step-indicator">3</div>
+            <span>Submitting deployment UserOp to bundler...</span>
+          </div>
+          <div class="deploy-step" id="ob-deploy-step-4">
+            <div class="step-indicator">4</div>
+            <span>Waiting for confirmation...</span>
+          </div>
+        </div>
+        <button class="ob-btn" id="ob-deploy-btn" onclick="onboardingDeploy()">Deploy Smart Wallet</button>
+        <div class="ob-status" id="ob-deploy-result" style="display: none;">
+          <div class="ob-status-dot detected"></div>
+          <span id="ob-deploy-text">Smart wallet deployed</span>
+        </div>
+        <button class="ob-btn ob-btn-secondary" id="ob-deploy-skip" onclick="advanceOnboarding('done')">I'll do this later</button>
+      </div>
+    </div>
+
+    <!-- Done -->
+    <div class="onboarding-step" id="ob-done">
+      <div class="onboarding-card">
+        <div class="ob-checkmark">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <div class="ob-done-title">Your assets are quantum-safe</div>
+        <div class="ob-stats" style="grid-template-columns: repeat(4, 1fr);">
+          <div class="ob-stat">
+            <div class="ob-stat-label">Security</div>
+            <div class="ob-stat-value">NIST L3</div>
+          </div>
+          <div class="ob-stat">
+            <div class="ob-stat-label">Key</div>
+            <div class="ob-stat-value">&#10003;</div>
+          </div>
+          <div class="ob-stat">
+            <div class="ob-stat-label">Signed</div>
+            <div class="ob-stat-value">&#10003;</div>
+          </div>
+          <div class="ob-stat">
+            <div class="ob-stat-label">Account</div>
+            <div class="ob-stat-value" id="ob-done-account">&#10003;</div>
+          </div>
+        </div>
+        <button class="ob-btn" onclick="finishOnboarding()">Open Wallet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast"></div>
+
+  <div class="grid-bg"></div>
+
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">
+        <div class="logo-icon">
+          <div class="logo-dot"></div>
+          <div class="logo-dot"></div>
+          <div class="logo-dot"></div>
+          <div class="logo-dot"></div>
+          <div class="logo-dot"></div>
+          <div class="logo-dot"></div>
+          <div class="logo-dot"></div>
+          <div class="logo-dot"></div>
+          <div class="logo-dot"></div>
+        </div>
+        <span class="logo-text">PQ Wallet</span>
+      </div>
+      <div class="tagline">ML-DSA-65 // FIPS 204</div>
+
+      <div class="connection">
+        <div class="connection-status">
+          <div class="status-dot" id="statusDot"></div>
+          <span class="status-text" id="statusText">Disconnected</span>
+        </div>
+        <button class="btn btn-primary" onclick="connectSnap()">Connect Snap</button>
+      </div>
+
+      <nav class="nav">
+        <div class="nav-section">
+          <div class="nav-title">Get Started</div>
+          <a class="nav-item" onclick="showPage('quickstart')">Quickstart Guide</a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-title">Keys</div>
+          <a class="nav-item active" onclick="showPage('keys')">Key Management</a>
+          <a class="nav-item" onclick="showPage('backup')">Backup & Restore</a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-title">Signing</div>
+          <a class="nav-item" data-requires="keypair" onclick="showPage('sign')">Sign Message</a>
+          <a class="nav-item" data-requires="keypair" onclick="showPage('userop')">Sign UserOp</a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-title">ERC-4337</div>
+          <a class="nav-item" data-requires="keypair" onclick="showPage('wallet')">Wallet</a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-title">Testing</div>
+          <a class="nav-item" data-requires="keypair" onclick="showPage('dapp')">Dapp Simulation</a>
+          <a class="nav-item" data-requires="keypair" onclick="showPage('batch')">Batch Operations</a>
+          <a class="nav-item" onclick="showPage('log')">Activity Log</a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-title">Reference</div>
+          <a class="nav-item" onclick="showPage('docs')">Documentation</a>
+          <a class="nav-item" onclick="showPage('about')">About</a>
+        </div>
+      </nav>
+
+      <div class="keypair-info">
+        <div class="keypair-label">Public Key</div>
+        <div class="keypair-value" id="sidebarPubkey">No keypair</div>
+        <a class="reset-onboarding" onclick="resetOnboarding()">Reset Onboarding</a>
+      </div>
+    </aside>
+
+    <!-- Wallet Sidebar (visible in wallet mode) -->
+    <aside class="wallet-sidebar" id="walletSidebar">
+      <div class="logo">
+        <div class="logo-icon">
+          <div class="logo-dot"></div><div class="logo-dot"></div><div class="logo-dot"></div>
+          <div class="logo-dot"></div><div class="logo-dot"></div><div class="logo-dot"></div>
+          <div class="logo-dot"></div><div class="logo-dot"></div><div class="logo-dot"></div>
+        </div>
+        <span class="logo-text">PQ Wallet</span>
+      </div>
+      <div class="tagline">ML-DSA-65 // FIPS 204</div>
+
+      <div class="wallet-sidebar-account" id="walletSidebarAccountCard">
+        <div class="connection-status" style="margin-bottom: 10px;">
+          <div class="status-dot" id="walletStatusDot"></div>
+          <span class="status-text" id="walletStatusText">Disconnected</span>
+        </div>
+        <div class="wallet-sidebar-network" id="walletSidebarNetwork">Sepolia</div>
+        <div class="wallet-sidebar-account-addr" id="walletSidebarAddr">Not deployed</div>
+        <div class="wallet-sidebar-balance" id="walletSidebarBalance"></div>
+        <div style="font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-top: 8px;">Kernel Smart Wallet</div>
+      </div>
+
+      <nav class="nav">
+        <div class="nav-section">
+          <a class="nav-item active" onclick="walletNav('wallet')">Home</a>
+          <a class="nav-item" onclick="walletNav('buy')">Buy</a>
+          <a class="nav-item" onclick="walletNav('send')">Send</a>
+          <a class="nav-item" onclick="walletNav('swap')">Swap</a>
+          <a class="nav-item" onclick="walletNav('bridge')">Bridge</a>
+          <a class="nav-item" onclick="walletNav('stake')">Stake</a>
+          <a class="nav-item" onclick="walletNav('log')">Activity</a>
+        </div>
+        <details class="dev-disclosure">
+          <summary>Developer</summary>
+          <a class="nav-item" onclick="walletNav('sign')">Sign Message</a>
+          <a class="nav-item" onclick="walletNav('keys')">Key Management</a>
+          <a class="nav-item" onclick="walletNav('backup')">Backup &amp; Restore</a>
+          <a class="nav-item" onclick="walletNav('userop')">Sign UserOp</a>
+          <a class="nav-item" onclick="walletNav('batch')">Batch Operations</a>
+          <a class="nav-item" onclick="walletNav('dapp')">Dapp Simulation</a>
+          <a class="nav-item" onclick="walletNav('docs')">Documentation</a>
+          <a class="nav-item" onclick="walletNav('about')">About</a>
+        </details>
+      </nav>
+
+      <div class="keypair-info">
+        <a class="reset-onboarding" onclick="resetOnboarding()">Reset Onboarding</a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Quickstart Page -->
+      <div class="page" id="page-quickstart">
+        <h1 class="page-title">Quickstart</h1>
+        <p class="page-description">Get started with PQ Wallet in minutes</p>
+
+        <div class="card">
+          <div class="card-title">1. Install MetaMask Flask</div>
+          <div class="card-description">The developer version of MetaMask with Snaps support. Disable regular MetaMask extension first.</div>
+          <a href="https://metamask.io/flask/" target="_blank" class="btn" style="margin-top: 8px;">Download MetaMask Flask</a>
+        </div>
+
+        <div class="card">
+          <div class="card-title">2. Build & Run the Snap</div>
+          <div class="card-description">Install dependencies, build, and serve locally</div>
+          <div class="code-block">npm install
+npm run build
+npm run serve</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">3. Connect</div>
+          <div class="card-description">Click "Connect Snap" in the sidebar, or run in browser console:</div>
+          <div class="code-block">await ethereum.request({
+  method: 'wallet_requestSnaps',
+  params: { 'local:http://localhost:8080': {} }
+});</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">4. Generate Keypair</div>
+          <div class="card-description">Create your ML-DSA-65 post-quantum keypair (1,952 byte public key)</div>
+          <div class="code-block">const { publicKey } = await ethereum.request({
+  method: 'wallet_invokeSnap',
+  params: {
+    snapId: 'local:http://localhost:8080',
+    request: { method: 'pq_getPublicKey' }
+  }
+});</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">5. Sign</div>
+          <div class="card-description">Sign an ERC-4337 UserOperation with domain separation</div>
+          <div class="code-block">const { signature } = await ethereum.request({
+  method: 'wallet_invokeSnap',
+  params: {
+    snapId: 'local:http://localhost:8080',
+    request: {
+      method: 'pq_signUserOp',
+      params: { userOpHash: '0x...', chainId: 11155420 }
+    }
+  }
+});</div>
+        </div>
+
+        <div class="warning-box">
+          <div class="warning-title">Ready?</div>
+          Click "Connect Snap" above, then go to Key Management to generate your first post-quantum keypair.
+        </div>
+      </div>
+
+      <!-- Keys Page -->
+      <div class="page" id="page-keys">
+        <h1 class="page-title">Key Management</h1>
+        <p class="page-description">Generate and manage your post-quantum keypair</p>
+
+        <div class="stats-grid">
+          <div class="stat">
+            <div class="stat-label">Algorithm</div>
+            <div class="stat-value">ML-DSA-65</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Security</div>
+            <div class="stat-value">Level 3</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Nonce</div>
+            <div class="stat-value mono" id="statNonce">0</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Keypair Operations</div>
+          <div class="card-description">Generate a new keypair or retrieve existing one from snap storage</div>
+          <div class="btn-row">
+            <button class="btn" onclick="getPublicKey(true)">Generate New</button>
+            <button class="btn" onclick="getPublicKey(false)">Get Existing</button>
+            <button class="btn" onclick="getInfo()">Refresh Status</button>
+          </div>
+          <div class="result" id="keyResult"></div>
+        </div>
+      </div>
+
+      <!-- Backup Page -->
+      <div class="page" id="page-backup">
+        <h1 class="page-title">Backup & Restore</h1>
+        <p class="page-description">Export encrypted backup or restore from backup</p>
+
+        <div class="card">
+          <div class="card-title">Export Backup</div>
+          <div class="card-description">Encrypted with PBKDF2 (100k iterations) + AES-256-GCM</div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-input" id="exportPassword" placeholder="Minimum 8 characters">
+          </div>
+          <button class="btn" onclick="exportKey()">Export & Copy to Clipboard</button>
+          <div class="result" id="exportResult"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Import Backup</div>
+          <div class="card-description">Restore keypair from encrypted backup data</div>
+          <div class="form-group">
+            <label class="form-label">Backup Data</label>
+            <textarea class="form-input" id="importBackup" placeholder="Paste encrypted backup (0x...)"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-input" id="importPassword" placeholder="Enter backup password">
+          </div>
+          <button class="btn" onclick="importKey()">Import Backup</button>
+          <div class="result" id="importResult"></div>
+        </div>
+      </div>
+
+      <!-- Sign Message Page -->
+      <div class="page" id="page-sign">
+        <h1 class="page-title">Sign Message</h1>
+        <p class="page-description">Sign arbitrary data with your post-quantum key</p>
+
+        <div class="card">
+          <div class="card-title">Message Signing</div>
+          <div class="card-description">Signs using ML-DSA-65 with hedged randomness</div>
+          <div class="form-group">
+            <label class="form-label">Message</label>
+            <input type="text" class="form-input" id="messageInput" placeholder="Enter message to sign" value="Hello, post-quantum world!">
+            <div class="form-hint">Text will be UTF-8 encoded. Prefix with 0x for raw hex.</div>
+          </div>
+          <button class="btn" onclick="signMessage()">Sign Message</button>
+          <div class="result" id="signResult"></div>
+        </div>
+      </div>
+
+      <!-- UserOp Page -->
+      <div class="page" id="page-userop">
+        <h1 class="page-title">Sign UserOperation</h1>
+        <p class="page-description">ERC-4337 signing with domain separation</p>
+
+        <div class="card">
+          <div class="card-title">UserOperation Signing</div>
+          <div class="card-description">Domain: SHA3-256(userOpHash || chainId || nonce)</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">UserOp Hash</label>
+              <input type="text" class="form-input" id="userOpHash" placeholder="0x..." value="0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Chain ID</label>
+              <input type="number" class="form-input" id="chainId" value="11155420">
+            </div>
+          </div>
+          <div class="form-hint" style="margin-bottom: 16px;">
+            Common chains: Mainnet (1), Sepolia (11155111), OP Sepolia (11155420), Base Sepolia (84532)
+          </div>
+          <button class="btn" onclick="signUserOp()">Sign UserOperation</button>
+          <div class="result" id="userOpResult"></div>
+        </div>
+      </div>
+
+      <!-- Dapp Simulation Page -->
+      <div class="page" id="page-dapp">
+        <h1 class="page-title">Simulate Dapp</h1>
+        <p class="page-description">Test signing flow as it would appear from a dapp</p>
+
+        <div class="warning-box">
+          <div class="warning-title">Development Only</div>
+          This simulates how a dapp would interact with PQ Wallet. In production, dapps call the snap via wallet_invokeSnap RPC.
+        </div>
+
+        <div class="dapp-preview">
+          <div class="dapp-header">
+            <div class="dapp-icon">🦄</div>
+            <div>
+              <div class="dapp-name">Uniswap V4</div>
+              <div class="dapp-url">app.uniswap.org</div>
+            </div>
+          </div>
+          <div class="tx-details">
+            <div class="tx-row">
+              <span class="tx-label">Action</span>
+              <span class="tx-value">Swap ETH → USDC</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">Amount</span>
+              <span class="tx-value">0.1 ETH</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">Expected Output</span>
+              <span class="tx-value">~250 USDC</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">Network</span>
+              <span class="tx-value">OP Sepolia</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">UserOp Hash</span>
+              <span class="tx-value" style="font-size: 10px;">0xabcd...1234</span>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="simulateDappSign()">Approve & Sign with PQ Wallet</button>
+        </div>
+        <div class="result" id="dappResult"></div>
+
+        <div class="card">
+          <div class="card-title">Custom Dapp Request</div>
+          <div class="card-description">Simulate a custom signing request</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Dapp Name</label>
+              <input type="text" class="form-input" id="dappName" value="My Dapp">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Action</label>
+              <input type="text" class="form-input" id="dappAction" value="Transfer 100 USDC">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Data to Sign (hex)</label>
+            <input type="text" class="form-input" id="dappData" placeholder="0x..." value="0xdeadbeef">
+          </div>
+          <button class="btn" onclick="simulateCustomDapp()">Send Signing Request</button>
+          <div class="result" id="customDappResult"></div>
+        </div>
+      </div>
+
+      <!-- Batch Operations Page -->
+      <div class="page" id="page-batch">
+        <h1 class="page-title">Batch Operations</h1>
+        <p class="page-description">Test multiple signing operations in sequence</p>
+
+        <div class="warning-box">
+          <div class="warning-title">Nonce Tracking Test</div>
+          Each signature increments the nonce, providing replay protection across signing sessions.
+        </div>
+
+        <div class="card">
+          <div class="card-title">Batch Sign Test</div>
+          <div class="card-description">Sign multiple messages to verify nonce increments correctly</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Number of Signatures</label>
+              <input type="number" class="form-input" id="batchCount" value="5" min="1" max="20">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Chain ID</label>
+              <input type="number" class="form-input" id="batchChainId" value="11155420">
+            </div>
+          </div>
+          <button class="btn" onclick="runBatchTest()">Run Batch Test</button>
+          <div class="result" id="batchResult"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Cross-Chain Test</div>
+          <div class="card-description">Sign same UserOp hash on different chains (should produce different signatures)</div>
+          <div class="form-group">
+            <label class="form-label">UserOp Hash</label>
+            <input type="text" class="form-input" id="crossChainHash" value="0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890">
+          </div>
+          <button class="btn" onclick="runCrossChainTest()">Test Cross-Chain Signing</button>
+          <div class="result" id="crossChainResult"></div>
+        </div>
+      </div>
+
+      <!-- Log Page -->
+      <div class="page" id="page-log">
+        <h1 class="page-title">Activity Log</h1>
+        <p class="page-description">All snap interactions and responses</p>
+
+        <div class="btn-row" style="margin-bottom: 16px;">
+          <button class="btn btn-small" onclick="clearLog()">Clear Log</button>
+          <button class="btn btn-small" onclick="exportLog()">Export Log</button>
+        </div>
+
+        <div class="log" id="log"></div>
+      </div>
+
+      <!-- Documentation Page -->
+      <div class="page" id="page-docs">
+        <h1 class="page-title">Documentation</h1>
+        <p class="page-description">API reference and integration guide</p>
+
+        <div class="card">
+          <div class="card-title">RPC Methods</div>
+          <div class="card-description">Available methods for interacting with the snap</div>
+          <div class="tx-details" style="margin-bottom: 0;">
+            <div class="tx-row">
+              <span class="tx-label">pq_getPublicKey</span>
+              <span class="tx-value" style="font-family: inherit;">Get or generate keypair</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">pq_signMessage</span>
+              <span class="tx-value" style="font-family: inherit;">Sign arbitrary message</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">pq_signUserOp</span>
+              <span class="tx-value" style="font-family: inherit;">Sign ERC-4337 UserOperation</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">pq_exportKey</span>
+              <span class="tx-value" style="font-family: inherit;">Export encrypted backup</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">pq_importKey</span>
+              <span class="tx-value" style="font-family: inherit;">Restore from backup</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">pq_getInfo</span>
+              <span class="tx-value" style="font-family: inherit;">Get snap status</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">pq_getPublicKey</div>
+          <div class="card-description">Generate or retrieve post-quantum keypair</div>
+          <div class="code-block">// Request
+{ method: 'pq_getPublicKey', params: { create: true } }
+
+// Response
+{ publicKey: '0x...', level: 'ml_dsa65', created: true }</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">pq_signMessage</div>
+          <div class="card-description">Sign arbitrary hex-encoded message</div>
+          <div class="code-block">// Request
+{ method: 'pq_signMessage', params: { message: '0x...' } }
+
+// Response
+{ signature: '0x...', nonce: 1 }</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">pq_signUserOp</div>
+          <div class="card-description">Sign ERC-4337 UserOperation with domain separation</div>
+          <div class="code-block">// Request
+{ method: 'pq_signUserOp', params: { userOpHash: '0x...', chainId: 11155420 } }
+
+// Response
+{ signature: '0x...', nonce: 1 }
+
+// Signed payload: SHA3-256(userOpHash || chainId || nonce)</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">pq_exportKey / pq_importKey</div>
+          <div class="card-description">Backup and restore keypair (PBKDF2 + AES-256-GCM encrypted)</div>
+          <div class="code-block">// Export
+{ method: 'pq_exportKey', params: { password: 'min8chars' } }
+// Returns: { backup: '0x...' }
+
+// Import
+{ method: 'pq_importKey', params: { backup: '0x...', password: '...' } }
+// Returns: { publicKey, level, created }</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Integration Example</div>
+          <div class="card-description">Complete dapp integration flow</div>
+          <div class="code-block">const SNAP_ID = 'local:http://localhost:8080';
+
+// 1. Install snap
+await ethereum.request({
+  method: 'wallet_requestSnaps',
+  params: { [SNAP_ID]: {} }
+});
+
+// 2. Get public key
+const { publicKey } = await ethereum.request({
+  method: 'wallet_invokeSnap',
+  params: { snapId: SNAP_ID, request: { method: 'pq_getPublicKey' } }
+});
+
+// 3. Sign UserOperation
+const { signature } = await ethereum.request({
+  method: 'wallet_invokeSnap',
+  params: {
+    snapId: SNAP_ID,
+    request: {
+      method: 'pq_signUserOp',
+      params: { userOpHash: '0x...', chainId: 11155420 }
+    }
+  }
+});</div>
+        </div>
+      </div>
+
+      <!-- About Page -->
+      <div class="page" id="page-about">
+        <h1 class="page-title">About</h1>
+        <p class="page-description">A smart wallet that only speaks post-quantum</p>
+
+        <div class="card">
+          <div class="card-title">How It Works</div>
+          <div class="card-description">PQ Wallet creates a Kernel smart wallet (ERC-4337) that only accepts ML-DSA-65 signatures. Your regular MetaMask ECDSA key cannot authorize transactions on this wallet — only your post-quantum key can. Even if your private key is compromised by a quantum computer or any other attack, assets in your smart wallet are safe.</div>
+          <div class="tx-details" style="margin-bottom: 0;">
+            <div class="tx-row">
+              <span class="tx-label">Step 1</span>
+              <span class="tx-value" style="font-family: inherit;">Install PQ Snap into MetaMask</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">Step 2</span>
+              <span class="tx-value" style="font-family: inherit;">Generate ML-DSA-65 keypair</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">Step 3</span>
+              <span class="tx-value" style="font-family: inherit;">Deploy smart wallet (only PQ signatures accepted)</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">Step 4</span>
+              <span class="tx-value" style="font-family: inherit;">Transfer assets to smart wallet</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">Result</span>
+              <span class="tx-value" style="font-family: inherit;">ECDSA compromise = assets untouchable</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat">
+            <div class="stat-label">Algorithm</div>
+            <div class="stat-value">ML-DSA-65</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Standard</div>
+            <div class="stat-value">FIPS 204</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Security</div>
+            <div class="stat-value">NIST L3</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Cryptographic Properties</div>
+          <div class="card-description">ML-DSA-65 (Dilithium) lattice-based signatures</div>
+          <div class="tx-details" style="margin-bottom: 0;">
+            <div class="tx-row">
+              <span class="tx-label">Security Level</span>
+              <span class="tx-value">NIST Level 3 (~192-bit)</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">Public Key</span>
+              <span class="tx-value">1,952 bytes</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">Secret Key</span>
+              <span class="tx-value">4,032 bytes</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">Signature</span>
+              <span class="tx-value">~3,309 bytes</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">Quantum Resistant</span>
+              <span class="tx-value">Yes</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Security Model</div>
+          <div class="card-description">Why ECDSA compromise doesn't matter</div>
+          <div class="tx-details" style="margin-bottom: 0;">
+            <div class="tx-row">
+              <span class="tx-label">Wallet Validator</span>
+              <span class="tx-value">ML-DSA-65 only (ECDSA rejected)</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">Key Storage</span>
+              <span class="tx-value">MetaMask encrypted state</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">Snap Isolation</span>
+              <span class="tx-value">SES sandbox (no network)</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">Backup</span>
+              <span class="tx-value">PBKDF2 (100k) + AES-256-GCM</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">Domain Separation</span>
+              <span class="tx-value">chainId in payload</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">Replay Protection</span>
+              <span class="tx-value">Nonce tracking</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Validation</div>
+          <div class="card-description">Verified against official NIST ACVP test vectors</div>
+          <div class="tx-details" style="margin-bottom: 0;">
+            <div class="tx-row">
+              <span class="tx-label">ML-DSA-44 Keygen</span>
+              <span class="tx-value">25/25 passed</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">ML-DSA-65 Keygen</span>
+              <span class="tx-value">25/25 passed</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">ML-DSA-87 Keygen</span>
+              <span class="tx-value">25/25 passed</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">Cross-verification</span>
+              <span class="tx-value">30/30 passed</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Dependencies</div>
+          <div class="card-description">Audited cryptographic libraries</div>
+          <div class="tx-details" style="margin-bottom: 0;">
+            <div class="tx-row">
+              <span class="tx-label">ML-DSA</span>
+              <span class="tx-value">@noble/post-quantum</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">Hashes</span>
+              <span class="tx-value">@noble/hashes</span>
+            </div>
+            <div class="tx-row">
+              <span class="tx-label">Framework</span>
+              <span class="tx-value">@metamask/snaps-sdk</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="warning-box">
+          <div class="warning-title">Development Version</div>
+          This snap is for testing with MetaMask Flask. Production deployment requires audit and npm publishing.
+        </div>
+      </div>
+
+      <!-- Buy Page -->
+      <div class="page" id="page-buy">
+        <h1 class="page-title">Buy</h1>
+        <p class="page-description">Purchase crypto with fiat — all transactions signed with ML-DSA-65</p>
+
+        <div class="card">
+          <div class="card-title">Buy Crypto</div>
+          <div class="card-description">Simulated fiat on-ramp. Real PQ signature is generated to authorize the purchase.</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">You Pay</label>
+              <input type="text" class="form-input" id="buyAmount" value="100" placeholder="0.00">
+              <div class="form-hint">USD</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">You Receive (est.)</label>
+              <input type="text" class="form-input" id="buyReceive" value="" readonly placeholder="—">
+              <div class="form-hint">ETH</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Provider</label>
+            <select class="form-input" id="buyProvider">
+              <option value="moonpay">MoonPay</option>
+              <option value="transak">Transak</option>
+              <option value="banxa">Banxa</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="executeBuy()">Buy ETH</button>
+          <div class="result" id="buyResult"></div>
+        </div>
+      </div>
+
+      <!-- Swap Page -->
+      <div class="page" id="page-swap">
+        <h1 class="page-title">Swap</h1>
+        <p class="page-description">Exchange tokens — every swap authorized by your post-quantum key</p>
+
+        <div class="card">
+          <div class="card-title">Swap Tokens</div>
+          <div class="card-description">Simulated DEX aggregator. The swap UserOp is signed with ML-DSA-65.</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">From</label>
+              <input type="text" class="form-input" id="swapFromAmount" value="0.1" placeholder="0.0">
+              <div class="form-hint">ETH</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">To (est.)</label>
+              <input type="text" class="form-input" id="swapToAmount" value="" readonly placeholder="—">
+              <div class="form-hint">
+                <select id="swapToToken" style="background:transparent;border:none;color:var(--text-secondary);font-family:inherit;font-size:11px;cursor:pointer;">
+                  <option value="USDC">USDC</option>
+                  <option value="DAI">DAI</option>
+                  <option value="WBTC">WBTC</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="tx-details" id="swapQuote" style="margin-bottom: 16px; display: none;">
+            <div class="tx-row"><span class="tx-label">Rate</span><span class="tx-value" id="swapRate">—</span></div>
+            <div class="tx-row"><span class="tx-label">Slippage</span><span class="tx-value">0.5%</span></div>
+            <div class="tx-row"><span class="tx-label">Route</span><span class="tx-value" id="swapRoute">—</span></div>
+          </div>
+          <button class="btn btn-primary" onclick="executeSwap()">Review Swap</button>
+          <div class="result" id="swapResult"></div>
+        </div>
+      </div>
+
+      <!-- Bridge Page -->
+      <div class="page" id="page-bridge">
+        <h1 class="page-title">Bridge</h1>
+        <p class="page-description">Move assets across chains — bridging secured by ML-DSA-65</p>
+
+        <div class="card">
+          <div class="card-title">Bridge Assets</div>
+          <div class="card-description">Simulated cross-chain bridge. The bridge UserOp is signed with your PQ key.</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">From Network</label>
+              <select class="form-input" id="bridgeFrom">
+                <option value="11155111">Sepolia</option>
+                <option value="11155420">OP Sepolia</option>
+                <option value="84532">Base Sepolia</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">To Network</label>
+              <select class="form-input" id="bridgeTo">
+                <option value="11155420">OP Sepolia</option>
+                <option value="84532">Base Sepolia</option>
+                <option value="11155111">Sepolia</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Amount</label>
+            <input type="text" class="form-input" id="bridgeAmount" value="0.05" placeholder="0.0">
+            <div class="form-hint">ETH</div>
+          </div>
+          <div class="tx-details" id="bridgeQuote" style="margin-bottom: 16px; display: none;">
+            <div class="tx-row"><span class="tx-label">Est. Receive</span><span class="tx-value" id="bridgeReceive">—</span></div>
+            <div class="tx-row"><span class="tx-label">Bridge Fee</span><span class="tx-value" id="bridgeFee">—</span></div>
+            <div class="tx-row"><span class="tx-label">Est. Time</span><span class="tx-value" id="bridgeTime">—</span></div>
+          </div>
+          <button class="btn btn-primary" onclick="executeBridge()">Bridge ETH</button>
+          <div class="result" id="bridgeResult"></div>
+        </div>
+      </div>
+
+      <!-- Stake Page -->
+      <div class="page" id="page-stake">
+        <h1 class="page-title">Stake</h1>
+        <p class="page-description">Earn yield on your ETH — staking authorized by your post-quantum key</p>
+
+        <div class="stats-grid">
+          <div class="stat">
+            <div class="stat-label">APY</div>
+            <div class="stat-value" id="stakeApy">3.2%</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Staked</div>
+            <div class="stat-value mono" id="stakeStaked">0 ETH</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Rewards</div>
+            <div class="stat-value mono" id="stakeRewards">0 ETH</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Stake ETH</div>
+          <div class="card-description">Simulated liquid staking via Lido. Staking deposit is signed with ML-DSA-65.</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Amount to Stake</label>
+              <input type="text" class="form-input" id="stakeAmount" value="0.1" placeholder="0.0">
+              <div class="form-hint">ETH</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">You Receive (est.)</label>
+              <input type="text" class="form-input" id="stakeReceive" value="" readonly placeholder="—">
+              <div class="form-hint">stETH</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Provider</label>
+            <select class="form-input" id="stakeProvider">
+              <option value="lido">Lido</option>
+              <option value="rocketpool">Rocket Pool</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="executeStake()">Stake ETH</button>
+          <div class="result" id="stakeResult"></div>
+        </div>
+      </div>
+
+      <!-- Wallet Page (replaces Smart Account + Send + History) -->
+      <div class="page" id="page-wallet">
+
+        <!-- Pre-deploy: show deploy card -->
+        <div id="wallet-pre-deploy">
+          <h1 class="page-title">Smart Wallet</h1>
+          <p class="page-description">Deploy a wallet that only accepts post-quantum signatures</p>
+
+          <div class="warning-box">
+            <div class="warning-title">Mocked Deployment</div>
+            No real on-chain transaction will be submitted. All blockchain interactions are simulated in the browser while ML-DSA signatures remain real.
+          </div>
+
+          <div class="card">
+            <div class="card-title">Deploy Smart Wallet</div>
+            <div class="card-description">Create a Kernel (ERC-4337) smart wallet with ML-DSA-65 as the only accepted validator. Assets held here cannot be moved with ECDSA.</div>
+            <div class="form-group">
+              <label class="form-label">Network</label>
+              <select class="form-input" id="deployNetwork" onchange="updateDeployNetwork()">
+                <option value="11155111">Sepolia</option>
+                <option value="11155420">OP Sepolia</option>
+                <option value="84532">Base Sepolia</option>
+              </select>
+            </div>
+
+            <div class="deploy-steps" id="deploySteps" style="display: none;">
+              <div class="deploy-step" id="deploy-step-1">
+                <div class="step-indicator">1</div>
+                <span>Computing counterfactual address via KernelFactory...</span>
+              </div>
+              <div class="deploy-step" id="deploy-step-2">
+                <div class="step-indicator">2</div>
+                <span>Building initCode with ML-DSA-65 validator plugin...</span>
+              </div>
+              <div class="deploy-step" id="deploy-step-3">
+                <div class="step-indicator">3</div>
+                <span>Submitting deployment UserOp to bundler...</span>
+              </div>
+              <div class="deploy-step" id="deploy-step-4">
+                <div class="step-indicator">4</div>
+                <span>Waiting for confirmation...</span>
+              </div>
+            </div>
+
+            <button class="btn btn-primary" id="deployBtn" onclick="deployAccount()">Deploy Smart Wallet</button>
+          </div>
+        </div>
+
+        <!-- Post-deploy: Wallet Home View -->
+        <div id="wallet-post-deploy" style="display: none;">
+          <div class="wallet-view">
+
+            <!-- Network pill -->
+            <div class="wallet-network" id="walletNetwork">
+              <span class="wallet-network-dot"></span>
+              <span id="walletNetworkName">Sepolia</span>
+            </div>
+
+            <!-- Account address -->
+            <div class="wallet-account" onclick="copyAccountAddress()" title="Copy address">
+              <span class="wallet-account-addr" id="walletAddress">0x0000...0000</span>
+              <span class="wallet-copy-icon">&#9114;</span>
+            </div>
+
+            <!-- PQ protection badge -->
+            <div class="wallet-shield">
+              <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              PQ Smart Wallet — ML-DSA-65 only
+            </div>
+
+            <!-- Balance hero -->
+            <div class="wallet-balance" id="walletBalance">$0.00</div>
+            <div class="wallet-balance-label" id="walletBalanceLabel">Sepolia · ECDSA rejected</div>
+
+            <!-- Action buttons -->
+            <div class="wallet-actions">
+              <button class="wallet-action-btn" id="walletSendBtn" onclick="showSendFlow()">
+                &#8593; Send
+              </button>
+            </div>
+
+            <!-- Asset list -->
+            <div class="wallet-assets" id="walletAssets">
+              <div class="wallet-assets-header">
+                <span class="wallet-assets-title">Assets</span>
+                <span class="wallet-assets-total" id="walletAssetsTotal"></span>
+              </div>
+              <div id="walletAssetList"></div>
+            </div>
+
+            <!-- Account detail card (toggled by clicking address) -->
+            <div class="wallet-detail-card" id="walletDetailCard">
+              <div class="card-title">Smart Wallet Details</div>
+              <div class="tx-details">
+                <div class="tx-row">
+                  <span class="tx-label">Account Address</span>
+                  <span class="tx-value" id="walletDetailAddr" style="font-size: 10px;">—</span>
+                </div>
+                <div class="tx-row">
+                  <span class="tx-label">Factory</span>
+                  <span class="tx-value" style="font-size: 10px;">0x5FF1...A96F (KernelFactory)</span>
+                </div>
+                <div class="tx-row">
+                  <span class="tx-label">Validator</span>
+                  <span class="tx-value" style="font-size: 10px;">ML-DSA-65 (ERC-7579 plugin)</span>
+                </div>
+                <div class="tx-row">
+                  <span class="tx-label">EntryPoint</span>
+                  <span class="tx-value" style="font-size: 10px;">0x5FF1...2790 (v0.7)</span>
+                </div>
+                <div class="tx-row">
+                  <span class="tx-label">Deploy TX</span>
+                  <span class="tx-value" id="walletDetailDeployTx" style="font-size: 10px;">—</span>
+                </div>
+                <div class="tx-row">
+                  <span class="tx-label">Network</span>
+                  <span class="tx-value" id="walletDetailChain">—</span>
+                </div>
+              </div>
+              <a class="btn btn-small" id="walletExplorerLink" href="#" target="_blank" style="margin-top: 12px; display: inline-block; width: auto;">View on Explorer</a>
+            </div>
+
+            <!-- Inline Send Flow -->
+            <div class="wallet-send-flow" id="walletSendFlow" style="display: none;">
+              <button class="wallet-send-back" onclick="hideSendFlow()">&#8592; Back to wallet</button>
+
+              <!-- Transaction Builder -->
+              <div class="card" id="send-builder">
+                <div class="card-title">Send ETH</div>
+                <div class="card-description">Build a UserOperation to send ETH</div>
+                <div class="form-group">
+                  <label class="form-label">Recipient Address</label>
+                  <input type="text" class="form-input" id="sendTo" value="0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" placeholder="0x...">
+                  <div class="form-hint">Pre-filled with vitalik.eth</div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Amount (ETH)</label>
+                    <input type="text" class="form-input" id="sendAmount" value="0.01" placeholder="0.0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Network</label>
+                    <input type="text" class="form-input" id="sendNetwork" readonly>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Calldata (optional)</label>
+                  <input type="text" class="form-input" id="sendCalldata" placeholder="0x (empty = ETH transfer)">
+                </div>
+                <button class="btn btn-primary" onclick="buildUserOp()">Build & Sign UserOp</button>
+              </div>
+
+              <!-- UserOp Preview -->
+              <div class="card" id="send-preview" style="display: none;">
+                <div class="card-title">UserOperation Preview</div>
+                <div class="card-description">Review before submission</div>
+                <div class="tx-details" id="sendPreviewDetails"></div>
+                <div class="btn-row" style="margin-top: 16px;">
+                  <button class="btn btn-primary" onclick="submitUserOp()">Submit to Bundler</button>
+                  <button class="btn" onclick="cancelUserOp()">Cancel</button>
+                </div>
+              </div>
+
+              <!-- Submission Progress -->
+              <div class="card" id="send-progress" style="display: none;">
+                <div class="card-title">Submitting Transaction</div>
+                <div class="card-description">Processing your UserOperation</div>
+                <div class="deploy-steps" id="sendSteps">
+                  <div class="deploy-step" id="send-step-1">
+                    <div class="step-indicator">1</div>
+                    <span>Estimating gas via eth_estimateUserOperationGas...</span>
+                  </div>
+                  <div class="deploy-step" id="send-step-2">
+                    <div class="step-indicator">2</div>
+                    <span>Signing UserOp hash with ML-DSA-65...</span>
+                  </div>
+                  <div class="deploy-step" id="send-step-3">
+                    <div class="step-indicator">3</div>
+                    <span>Sending to bundler via eth_sendUserOperation...</span>
+                  </div>
+                  <div class="deploy-step" id="send-step-4">
+                    <div class="step-indicator">4</div>
+                    <span>Waiting for eth_getUserOperationReceipt...</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Transaction Receipt -->
+              <div class="card" id="send-receipt" style="display: none;">
+                <div class="card-title">Transaction Confirmed</div>
+                <div class="card-description">Your transaction has been included in a block</div>
+                <div class="tx-details" id="receiptDetails"></div>
+                <div class="btn-row" style="margin-top: 16px;">
+                  <a class="btn btn-primary" id="receiptExplorerLink" href="#" target="_blank">View on Explorer</a>
+                  <button class="btn" onclick="newTransaction()">Done</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Activity feed -->
+            <div class="wallet-activity" id="walletActivity">
+              <div class="wallet-activity-title">Activity</div>
+              <div id="walletActivityList"></div>
+            </div>
+
+            <!-- PQ badge -->
+            <div class="wallet-pq-badge">
+              &#9670; Signed with ML-DSA-65
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const SNAP_ID = 'local:http://localhost:8080';
+    let currentPage = 'keys';
+    let isConnected = false;
+    let hasKeypair = false;
+    let onboardingState = localStorage.getItem('pq-onboarding') || 'welcome';
+
+    // ── ERC-4337 State ──
+    const DEFAULT_BALANCE = '1337000000000000000'; // 1.337 ETH
+
+    // Mock token holdings in the smart wallet
+    const WALLET_TOKENS = [
+      { symbol: 'ETH',  name: 'Ether',     decimals: 18, color: '#627EEA', icon: 'E' },
+      { symbol: 'USDC', name: 'USD Coin',   decimals: 6,  color: '#2775CA', icon: '$', defaultBalance: '2500000000' },      // 2,500
+      { symbol: 'DAI',  name: 'Dai',        decimals: 18, color: '#F5AC37', icon: 'D', defaultBalance: '1000000000000000000000' }, // 1,000
+      { symbol: 'WBTC', name: 'Wrapped BTC', decimals: 8, color: '#F7931A', icon: 'B', defaultBalance: '5000000' },          // 0.05
+    ];
+
+    // Mock USD prices
+    const TOKEN_PRICES = { ETH: 3200, USDC: 1, DAI: 1, WBTC: 64000 };
+
+    let accountState = {
+      deployed: false,
+      accountAddress: null,
+      deployTxHash: null,
+      deployedAt: null,
+      balance: DEFAULT_BALANCE,
+      tokenBalances: {},
+      faucetTxHashes: [],
+      transactions: [],
+      nextNonce: 0,
+      chainId: 11155111,
+    };
+
+    function save4337State() {
+      localStorage.setItem('pq-4337-state', JSON.stringify(accountState));
+    }
+
+    function load4337State() {
+      const saved = localStorage.getItem('pq-4337-state');
+      if (saved) {
+        try { accountState = JSON.parse(saved); } catch (e) { /* ignore */ }
+      }
+    }
+
+    function reset4337State() {
+      accountState = {
+        deployed: false, accountAddress: null, deployTxHash: null, deployedAt: null,
+        balance: DEFAULT_BALANCE, tokenBalances: {}, faucetTxHashes: [], transactions: [], nextNonce: 0, chainId: 11155111,
+      };
+      localStorage.removeItem('pq-4337-state');
+    }
+
+    // ── Mock Utilities ──
+    function mockTxHash() {
+      const bytes = new Uint8Array(32);
+      crypto.getRandomValues(bytes);
+      return '0x' + Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function mockAddress(seed) {
+      if (seed && seed.length >= 42) return '0x' + seed.slice(4, 44);
+      const bytes = new Uint8Array(20);
+      crypto.getRandomValues(bytes);
+      return '0x' + Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function mockGasEstimates() {
+      return {
+        callGasLimit: (80000 + Math.floor(Math.random() * 20000)).toString(),
+        verificationGasLimit: (150000 + Math.floor(Math.random() * 50000)).toString(),
+        preVerificationGas: (45000 + Math.floor(Math.random() * 10000)).toString(),
+        maxFeePerGas: (2000000000 + Math.floor(Math.random() * 500000000)).toString(),
+        maxPriorityFeePerGas: (100000000 + Math.floor(Math.random() * 50000000)).toString(),
+      };
+    }
+
+    function mockDelay(min, max) {
+      const ms = min + Math.floor(Math.random() * (max - min));
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function mockBlockNumber() {
+      return 7000000 + Math.floor(Math.random() * 500000);
+    }
+
+    function explorerUrl(chainId, type, hash) {
+      const bases = { 11155111: 'https://sepolia.etherscan.io', 11155420: 'https://sepolia-optimism.etherscan.io', 84532: 'https://sepolia.basescan.org' };
+      const base = bases[chainId] || bases[11155111];
+      return `${base}/${type}/${hash}`;
+    }
+
+    function formatEth(weiStr) {
+      const wei = BigInt(weiStr || '0');
+      const eth = Number(wei) / 1e18;
+      if (eth === 0) return '0 ETH';
+      if (eth < 0.0001) return '< 0.0001 ETH';
+      return eth.toFixed(4).replace(/\.?0+$/, '') + ' ETH';
+    }
+
+    function chainName(chainId) {
+      const names = { 1: 'Mainnet', 11155111: 'Sepolia', 11155420: 'OP Sepolia', 84532: 'Base Sepolia' };
+      return names[chainId] || `Chain ${chainId}`;
+    }
+
+    function estimateGasCost(gas) {
+      const total = (BigInt(gas.callGasLimit) + BigInt(gas.verificationGasLimit) + BigInt(gas.preVerificationGas)) * BigInt(gas.maxFeePerGas);
+      return total.toString();
+    }
+
+    // ── Toast ──
+    let toastTimeout;
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.toggle('error', isError);
+      toast.classList.add('visible');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => toast.classList.remove('visible'), 3000);
+    }
+
+    // ── Navigation ──
+    function showPage(page) {
+      const navItem = document.querySelector(`[onclick="showPage('${page}')"]`);
+      if (navItem && navItem.classList.contains('disabled')) {
+        const req = navItem.getAttribute('data-requires');
+        if (req === 'funded') showToast('Fund your account first', true);
+        else if (req === 'account') showToast('Deploy your smart wallet first', true);
+        else showToast('Connect snap and create a keypair first', true);
+        return;
+      }
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById(`page-${page}`).classList.add('active');
+      if (navItem) navItem.classList.add('active');
+      currentPage = page;
+      if (page === 'wallet') updateWalletUI();
+    }
+
+    function updateNavGuards() {
+      document.querySelectorAll('.nav-item[data-requires="keypair"]').forEach(item => {
+        item.classList.toggle('disabled', !hasKeypair);
+      });
+      document.querySelectorAll('.nav-item[data-requires="account"]').forEach(item => {
+        item.classList.toggle('disabled', !accountState.deployed);
+      });
+      document.querySelectorAll('.nav-item[data-requires="funded"]').forEach(item => {
+        item.classList.toggle('disabled', !accountState.deployed);
+      });
+    }
+
+    // ── Logging ──
+    function log(message, type = 'info') {
+      const logEl = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      entry.innerHTML = `<span class="log-time">${time}</span><span class="log-message">${message}</span>`;
+      logEl.insertBefore(entry, logEl.firstChild);
+    }
+
+    function clearLog() {
+      document.getElementById('log').innerHTML = '';
+      log('Log cleared');
+    }
+
+    function exportLog() {
+      const entries = Array.from(document.querySelectorAll('.log-entry')).map(e => e.textContent).join('\n');
+      navigator.clipboard.writeText(entries);
+      log('Log copied to clipboard', 'success');
+    }
+
+    // ── Results ──
+    function showResult(elementId, data, isError = false) {
+      const el = document.getElementById(elementId);
+      el.classList.add('visible');
+      el.classList.toggle('success', !isError);
+      el.classList.toggle('error', isError);
+      el.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+    }
+
+    // ── Utils ──
+    function toHex(str) {
+      if (str.startsWith('0x')) return str;
+      return '0x' + Array.from(new TextEncoder().encode(str))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+    }
+
+    function truncate(str, len = 20) {
+      if (str.length <= len * 2 + 3) return str;
+      return str.slice(0, len) + '...' + str.slice(-len);
+    }
+
+    function updateStatus(connected) {
+      isConnected = connected;
+      document.getElementById('statusDot').classList.toggle('connected', connected);
+      document.getElementById('statusText').textContent = connected ? 'Connected' : 'Disconnected';
+    }
+
+    function updateSidebar(info) {
+      const pkText = (info && info.hasKeypair && info.publicKeyPrefix) ? info.publicKeyPrefix + '...' : 'No keypair';
+      const hasPk = !!(info && info.hasKeypair && info.publicKeyPrefix);
+
+      document.getElementById('sidebarPubkey').textContent = pkText;
+      document.getElementById('sidebarPubkey').classList.toggle('none', !hasPk);
+
+      hasKeypair = hasPk;
+      if (info) {
+        document.getElementById('statNonce').textContent = info.nonce || 0;
+      }
+      updateNavGuards();
+    }
+
+    // ── Snap Interaction ──
+    async function connectSnap() {
+      try {
+        log('Connecting to snap...');
+        await ethereum.request({
+          method: 'wallet_requestSnaps',
+          params: { [SNAP_ID]: {} }
+        });
+        updateStatus(true);
+        log('Snap connected', 'success');
+        await getInfo(true);
+        updateNavGuards();
+      } catch (err) {
+        log(`Connection failed: ${err.message}`, 'error');
+      }
+    }
+
+    async function invokeSnap(method, params = {}) {
+      return ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: {
+          snapId: SNAP_ID,
+          request: { method, params }
+        }
+      });
+    }
+
+    async function getPublicKey(create = true) {
+      try {
+        log(`pq_getPublicKey(create: ${create})`);
+        const result = await invokeSnap('pq_getPublicKey', { create });
+        showResult('keyResult', result);
+        log(`Public key: ${truncate(result.publicKey, 16)}`, 'success');
+        hasKeypair = true;
+        updateNavGuards();
+        await getInfo(true);
+      } catch (err) {
+        showResult('keyResult', err.message, true);
+        log(`Error: ${err.message}`, 'error');
+      }
+    }
+
+    async function getInfo(silent = false) {
+      try {
+        if (!silent) log('pq_getInfo()');
+        const result = await invokeSnap('pq_getInfo');
+        if (!silent) {
+          showResult('keyResult', result);
+          log(`Status: hasKeypair=${result.hasKeypair}, nonce=${result.nonce}`, 'success');
+        }
+        updateSidebar(result);
+        return result;
+      } catch (err) {
+        if (!silent) {
+          showResult('keyResult', err.message, true);
+          log(`Error: ${err.message}`, 'error');
+        }
+      }
+    }
+
+    async function signMessage() {
+      if (!isConnected || !hasKeypair) {
+        showResult('signResult', 'Connect snap and create a keypair first', true);
+        return;
+      }
+      try {
+        const message = document.getElementById('messageInput').value;
+        const hexMessage = toHex(message);
+        log(`pq_signMessage(${truncate(hexMessage, 16)})`);
+        const result = await invokeSnap('pq_signMessage', { message: hexMessage });
+        showResult('signResult', {
+          signature: truncate(result.signature, 40),
+          bytes: (result.signature.length - 2) / 2,
+          nonce: result.nonce
+        });
+        log(`Signed with nonce ${result.nonce}`, 'success');
+        await getInfo(true);
+      } catch (err) {
+        showResult('signResult', err.message, true);
+        log(`Error: ${err.message}`, 'error');
+      }
+    }
+
+    async function signUserOp() {
+      if (!isConnected || !hasKeypair) {
+        showResult('userOpResult', 'Connect snap and create a keypair first', true);
+        return;
+      }
+      try {
+        const userOpHash = document.getElementById('userOpHash').value;
+        const chainId = parseInt(document.getElementById('chainId').value);
+        log(`pq_signUserOp(chain: ${chainId})`);
+        const result = await invokeSnap('pq_signUserOp', { userOpHash, chainId });
+        showResult('userOpResult', {
+          signature: truncate(result.signature, 40),
+          bytes: (result.signature.length - 2) / 2,
+          nonce: result.nonce,
+          chainId
+        });
+        log(`UserOp signed, nonce ${result.nonce}`, 'success');
+        await getInfo(true);
+      } catch (err) {
+        showResult('userOpResult', err.message, true);
+        log(`Error: ${err.message}`, 'error');
+      }
+    }
+
+    async function exportKey() {
+      if (!isConnected || !hasKeypair) {
+        showResult('exportResult', 'Connect snap and create a keypair first', true);
+        return;
+      }
+      try {
+        const password = document.getElementById('exportPassword').value;
+        if (password.length < 8) throw new Error('Password must be at least 8 characters');
+        log('pq_exportKey()');
+        const result = await invokeSnap('pq_exportKey', { password });
+        navigator.clipboard.writeText(result.backup);
+        showResult('exportResult', {
+          backup: truncate(result.backup, 40),
+          bytes: (result.backup.length - 2) / 2,
+          copied: true
+        });
+        log('Backup exported and copied', 'success');
+      } catch (err) {
+        showResult('exportResult', err.message, true);
+        log(`Error: ${err.message}`, 'error');
+      }
+    }
+
+    async function importKey() {
+      if (!isConnected) {
+        showResult('importResult', 'Connect snap first', true);
+        return;
+      }
+      try {
+        const backup = document.getElementById('importBackup').value;
+        const password = document.getElementById('importPassword').value;
+        log('pq_importKey()');
+        const result = await invokeSnap('pq_importKey', { backup, password });
+        showResult('importResult', result);
+        log(`Imported: ${result.level}`, 'success');
+        hasKeypair = true;
+        updateNavGuards();
+        await getInfo(true);
+      } catch (err) {
+        showResult('importResult', err.message, true);
+        log(`Error: ${err.message}`, 'error');
+      }
+    }
+
+    // ── Dapp Simulation ──
+    async function simulateDappSign() {
+      if (!isConnected || !hasKeypair) {
+        showResult('dappResult', 'Connect snap and create a keypair first', true);
+        return;
+      }
+      try {
+        log('[DAPP] Uniswap V4 requesting signature');
+        const fakeHash = '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+        const result = await invokeSnap('pq_signUserOp', {
+          userOpHash: fakeHash,
+          chainId: 11155420
+        });
+        showResult('dappResult', {
+          status: 'approved',
+          signature: truncate(result.signature, 30),
+          nonce: result.nonce
+        });
+        log('[DAPP] Transaction approved', 'success');
+        await getInfo(true);
+      } catch (err) {
+        showResult('dappResult', err.message, true);
+        log(`[DAPP] Rejected: ${err.message}`, 'error');
+      }
+    }
+
+    async function simulateCustomDapp() {
+      if (!isConnected || !hasKeypair) {
+        showResult('customDappResult', 'Connect snap and create a keypair first', true);
+        return;
+      }
+      try {
+        const name = document.getElementById('dappName').value;
+        const data = document.getElementById('dappData').value;
+        log(`[DAPP] ${name} requesting signature`);
+        const result = await invokeSnap('pq_signMessage', { message: data });
+        showResult('customDappResult', {
+          dapp: name,
+          signature: truncate(result.signature, 30),
+          nonce: result.nonce
+        });
+        log(`[DAPP] ${name} signature complete`, 'success');
+        await getInfo(true);
+      } catch (err) {
+        showResult('customDappResult', err.message, true);
+        log(`[DAPP] Error: ${err.message}`, 'error');
+      }
+    }
+
+    // ── Batch Testing ──
+    async function runBatchTest() {
+      if (!isConnected || !hasKeypair) {
+        showResult('batchResult', 'Connect snap and create a keypair first', true);
+        return;
+      }
+      try {
+        const count = parseInt(document.getElementById('batchCount').value);
+        const chainId = parseInt(document.getElementById('batchChainId').value);
+        log(`[BATCH] Starting ${count} signature test`);
+
+        const results = [];
+        for (let i = 0; i < count; i++) {
+          const hash = '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+          const result = await invokeSnap('pq_signUserOp', { userOpHash: hash, chainId });
+          results.push({ index: i + 1, nonce: result.nonce });
+          log(`[BATCH] ${i + 1}/${count} signed, nonce: ${result.nonce}`);
+        }
+
+        showResult('batchResult', {
+          total: count,
+          results: results,
+          nonceProgression: results.map(r => r.nonce).join(' \u2192 ')
+        });
+        log(`[BATCH] Complete: ${count} signatures`, 'success');
+        await getInfo(true);
+      } catch (err) {
+        showResult('batchResult', err.message, true);
+        log(`[BATCH] Error: ${err.message}`, 'error');
+      }
+    }
+
+    async function runCrossChainTest() {
+      if (!isConnected || !hasKeypair) {
+        showResult('crossChainResult', 'Connect snap and create a keypair first', true);
+        return;
+      }
+      try {
+        const hash = document.getElementById('crossChainHash').value;
+        const chains = [1, 11155111, 11155420, 84532];
+        log('[CROSS-CHAIN] Testing same hash on 4 chains');
+
+        const results = [];
+        for (const chainId of chains) {
+          const result = await invokeSnap('pq_signUserOp', { userOpHash: hash, chainId });
+          results.push({
+            chainId,
+            sigPrefix: result.signature.slice(0, 20),
+            nonce: result.nonce
+          });
+          log(`[CROSS-CHAIN] Chain ${chainId}: ${result.signature.slice(0, 16)}...`);
+        }
+
+        const allDifferent = new Set(results.map(r => r.sigPrefix)).size === results.length;
+        showResult('crossChainResult', {
+          hash: truncate(hash, 16),
+          chains: results,
+          domainSeparationWorking: allDifferent
+        });
+        log(`[CROSS-CHAIN] Domain separation: ${allDifferent ? 'PASS' : 'FAIL'}`, allDifferent ? 'success' : 'error');
+        await getInfo(true);
+      } catch (err) {
+        showResult('crossChainResult', err.message, true);
+        log(`[CROSS-CHAIN] Error: ${err.message}`, 'error');
+      }
+    }
+
+    // ── Kernel Smart Account (ERC-4337) ──
+    let pendingUserOp = null;
+
+    function updateDeployNetwork() {
+      accountState.chainId = parseInt(document.getElementById('deployNetwork').value);
+    }
+
+    function formatTokenBalance(raw, decimals) {
+      if (!raw || raw === '0') return '0';
+      const s = raw.padStart(decimals + 1, '0');
+      const whole = s.slice(0, s.length - decimals) || '0';
+      const frac = s.slice(s.length - decimals, s.length - decimals + 4).replace(/0+$/, '');
+      return frac ? `${whole}.${frac}` : whole;
+    }
+
+    function renderWalletAssets() {
+      const list = document.getElementById('walletAssetList');
+      const totalEl = document.getElementById('walletAssetsTotal');
+      if (!list) return;
+
+      let totalUsd = 0;
+      let html = '';
+
+      for (const token of WALLET_TOKENS) {
+        let rawBalance;
+        if (token.symbol === 'ETH') {
+          rawBalance = accountState.balance;
+        } else {
+          rawBalance = accountState.tokenBalances[token.symbol] || token.defaultBalance || '0';
+          // Initialize if not set
+          if (!accountState.tokenBalances[token.symbol] && token.defaultBalance) {
+            accountState.tokenBalances[token.symbol] = token.defaultBalance;
+          }
+        }
+
+        const display = formatTokenBalance(rawBalance, token.decimals);
+        const numericBalance = parseFloat(display) || 0;
+        const usdValue = numericBalance * (TOKEN_PRICES[token.symbol] || 0);
+        totalUsd += usdValue;
+
+        html += `<div class="wallet-asset-row">
+          <div class="wallet-asset-icon" style="background: ${token.color}22; color: ${token.color};">${token.icon}</div>
+          <div class="wallet-asset-info">
+            <div class="wallet-asset-name">${token.name}</div>
+            <div class="wallet-asset-symbol">${token.symbol}</div>
+          </div>
+          <div class="wallet-asset-amounts">
+            <div class="wallet-asset-balance">${display} ${token.symbol}</div>
+            <div class="wallet-asset-usd">$${usdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+          </div>
+        </div>`;
+      }
+
+      list.innerHTML = html;
+      totalEl.textContent = `$${totalUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+
+    function updateWalletUI() {
+      document.getElementById('wallet-pre-deploy').style.display = accountState.deployed ? 'none' : '';
+      document.getElementById('wallet-post-deploy').style.display = accountState.deployed ? '' : 'none';
+
+      if (document.getElementById('deployNetwork')) {
+        document.getElementById('deployNetwork').value = accountState.chainId.toString();
+      }
+
+      if (!accountState.deployed) return;
+
+      // Network
+      document.getElementById('walletNetworkName').textContent = chainName(accountState.chainId);
+
+      // Address
+      document.getElementById('walletAddress').textContent = accountState.accountAddress
+        ? truncate(accountState.accountAddress, 8) : '—';
+
+      // Balance — show total USD portfolio value
+      const ethBal = parseFloat(formatEth(accountState.balance)) || 0;
+      let portfolioUsd = ethBal * TOKEN_PRICES.ETH;
+      for (const token of WALLET_TOKENS) {
+        if (token.symbol === 'ETH') continue;
+        const raw = accountState.tokenBalances[token.symbol] || token.defaultBalance || '0';
+        const num = parseFloat(formatTokenBalance(raw, token.decimals)) || 0;
+        portfolioUsd += num * (TOKEN_PRICES[token.symbol] || 0);
+      }
+      document.getElementById('walletBalance').textContent = '$' + portfolioUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      document.getElementById('walletBalanceLabel').textContent = chainName(accountState.chainId) + ' · ECDSA rejected';
+
+      // Send button enabled when deployed
+      document.getElementById('walletSendBtn').disabled = !accountState.deployed;
+
+      // Send network field
+      document.getElementById('sendNetwork').value = chainName(accountState.chainId);
+
+      // Detail card
+      document.getElementById('walletDetailAddr').textContent = accountState.accountAddress;
+      document.getElementById('walletDetailDeployTx').textContent = truncate(accountState.deployTxHash, 12);
+      document.getElementById('walletDetailChain').textContent = chainName(accountState.chainId);
+      document.getElementById('walletExplorerLink').href = explorerUrl(accountState.chainId, 'address', accountState.accountAddress);
+
+      // Assets
+      renderWalletAssets();
+
+      // Activity feed
+      renderWalletActivity();
+
+      // Wallet sidebar
+      updateWalletSidebar();
+    }
+
+    function showSendFlow() {
+      document.getElementById('walletSendFlow').style.display = '';
+      document.getElementById('walletActivity').style.display = 'none';
+      document.getElementById('send-builder').style.display = '';
+      document.getElementById('send-preview').style.display = 'none';
+      document.getElementById('send-progress').style.display = 'none';
+      document.getElementById('send-receipt').style.display = 'none';
+      document.getElementById('sendNetwork').value = chainName(accountState.chainId);
+    }
+
+    function hideSendFlow() {
+      document.getElementById('walletSendFlow').style.display = 'none';
+      document.getElementById('walletActivity').style.display = '';
+      pendingUserOp = null;
+      updateWalletUI();
+    }
+
+    function toggleFundDropdown() {
+      const dd = document.getElementById('fundDropdown');
+      dd.classList.toggle('visible');
+    }
+
+    function hideFundDropdown() {
+      document.getElementById('fundDropdown').classList.remove('visible');
+    }
+
+    async function walletFaucet(amountWei) {
+      hideFundDropdown();
+      log(`[Kernel] Requesting faucet: ${formatEth(amountWei)}`);
+      const btn = document.getElementById('walletFundBtn');
+      btn.disabled = true;
+
+      await mockDelay(500, 1000);
+
+      const txHash = mockTxHash();
+      accountState.balance = (BigInt(accountState.balance) + BigInt(amountWei)).toString();
+      accountState.faucetTxHashes.push({ hash: txHash, amount: amountWei, timestamp: Date.now() });
+      save4337State();
+
+      btn.disabled = false;
+      updateWalletUI();
+      updateNavGuards();
+      log(`[Kernel] Received ${formatEth(amountWei)} — Balance: ${formatEth(accountState.balance)}`, 'success');
+      showToast(`Received ${formatEth(amountWei)}`);
+    }
+
+    function copyAccountAddress() {
+      if (!accountState.accountAddress) return;
+      const detailCard = document.getElementById('walletDetailCard');
+      detailCard.classList.toggle('visible');
+      navigator.clipboard.writeText(accountState.accountAddress);
+      showToast('Address copied to clipboard');
+    }
+
+    function renderWalletActivity() {
+      const list = document.getElementById('walletActivityList');
+
+      // Build combined activity: sends + faucets
+      const activities = [];
+
+      // Add send transactions
+      for (const tx of accountState.transactions) {
+        activities.push({
+          type: 'send',
+          amount: tx.value,
+          to: tx.to,
+          timestamp: tx.timestamp,
+          blockNumber: tx.blockNumber,
+          bundlerTxHash: tx.bundlerTxHash,
+          userOpHash: tx.userOpHash,
+          gasUsed: tx.gasUsed,
+          gasCost: tx.gasCost,
+          chainId: tx.chainId,
+          status: tx.status,
+        });
+      }
+
+      // Add faucet events
+      const faucets = accountState.faucetTxHashes;
+      if (Array.isArray(faucets)) {
+        for (const f of faucets) {
+          if (typeof f === 'object' && f.timestamp) {
+            activities.push({
+              type: 'fund',
+              amount: f.amount,
+              timestamp: f.timestamp,
+              hash: f.hash,
+            });
+          }
+        }
+      }
+
+      // Sort by timestamp descending
+      activities.sort((a, b) => b.timestamp - a.timestamp);
+
+      if (activities.length === 0) {
+        list.innerHTML = '<div class="wallet-empty">No activity yet</div>';
+        return;
+      }
+
+      list.innerHTML = activities.map(a => {
+        const date = new Date(a.timestamp);
+        const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+        if (a.type === 'send') {
+          return `
+            <div class="wallet-tx" onclick="this.classList.toggle('expanded')">
+              <div class="wallet-tx-header">
+                <div class="wallet-tx-left">
+                  <div class="wallet-tx-icon send">&#8593;</div>
+                  <div class="wallet-tx-info">
+                    <span class="wallet-tx-type">Send</span>
+                    <span class="wallet-tx-sub">To: ${truncate(a.to, 6)}</span>
+                  </div>
+                </div>
+                <div class="wallet-tx-right">
+                  <div class="wallet-tx-amount negative">-${formatEth(a.amount)}</div>
+                  <div class="wallet-tx-date">${dateStr} &middot; Confirmed</div>
+                </div>
+              </div>
+              <div class="wallet-tx-detail">
+                <div class="tx-details">
+                  <div class="tx-row"><span class="tx-label">Status</span><span class="tx-value" style="color:var(--success)">${a.status}</span></div>
+                  <div class="tx-row"><span class="tx-label">To</span><span class="tx-value" style="font-size:10px">${a.to}</span></div>
+                  <div class="tx-row"><span class="tx-label">Value</span><span class="tx-value">${formatEth(a.amount)}</span></div>
+                  <div class="tx-row"><span class="tx-label">Block</span><span class="tx-value">#${a.blockNumber.toLocaleString()}</span></div>
+                  <div class="tx-row"><span class="tx-label">UserOp Hash</span><span class="tx-value" style="font-size:10px">${truncate(a.userOpHash, 14)}</span></div>
+                  <div class="tx-row"><span class="tx-label">TX Hash</span><span class="tx-value" style="font-size:10px">${truncate(a.bundlerTxHash, 14)}</span></div>
+                  <div class="tx-row"><span class="tx-label">Gas Used</span><span class="tx-value">${Number(a.gasUsed).toLocaleString()}</span></div>
+                  <div class="tx-row"><span class="tx-label">Signature</span><span class="tx-value">ML-DSA-65 (PQ)</span></div>
+                </div>
+                <a class="btn btn-small" href="${explorerUrl(a.chainId, 'tx', a.bundlerTxHash)}" target="_blank" style="margin-top: 8px; display: inline-block; width: auto;">View on Explorer</a>
+              </div>
+            </div>
+          `;
+        } else {
+          return `
+            <div class="wallet-tx" onclick="this.classList.toggle('expanded')">
+              <div class="wallet-tx-header">
+                <div class="wallet-tx-left">
+                  <div class="wallet-tx-icon fund">&#8595;</div>
+                  <div class="wallet-tx-info">
+                    <span class="wallet-tx-type">Fund</span>
+                    <span class="wallet-tx-sub">Faucet</span>
+                  </div>
+                </div>
+                <div class="wallet-tx-right">
+                  <div class="wallet-tx-amount positive">+${formatEth(a.amount)}</div>
+                  <div class="wallet-tx-date">${dateStr} &middot; Confirmed</div>
+                </div>
+              </div>
+              <div class="wallet-tx-detail">
+                <div class="tx-details">
+                  <div class="tx-row"><span class="tx-label">Type</span><span class="tx-value">Testnet Faucet</span></div>
+                  <div class="tx-row"><span class="tx-label">Amount</span><span class="tx-value">${formatEth(a.amount)}</span></div>
+                  <div class="tx-row"><span class="tx-label">TX Hash</span><span class="tx-value" style="font-size:10px">${truncate(a.hash, 14)}</span></div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      }).join('');
+    }
+
+    async function deployAccount() {
+      if (!isConnected || !hasKeypair) {
+        showToast('Connect snap and create a keypair first', true);
+        return;
+      }
+
+      const btn = document.getElementById('deployBtn');
+      btn.disabled = true;
+      btn.textContent = 'Deploying...';
+      const stepsEl = document.getElementById('deploySteps');
+      stepsEl.style.display = '';
+
+      accountState.chainId = parseInt(document.getElementById('deployNetwork').value);
+      log(`[Kernel] Deploying Kernel account on ${chainName(accountState.chainId)}...`);
+
+      // Step 1: Computing counterfactual address via KernelFactory
+      const step1 = document.getElementById('deploy-step-1');
+      step1.classList.add('active');
+      await mockDelay(800, 1200);
+      const info = await getInfo(true);
+      const pubKeyPrefix = info && info.publicKeyPrefix ? info.publicKeyPrefix : '0x0000';
+      accountState.accountAddress = mockAddress(pubKeyPrefix);
+      step1.classList.remove('active');
+      step1.classList.add('done');
+      step1.querySelector('.step-indicator').textContent = '\u2713';
+      log(`[Kernel] Counterfactual address: ${truncate(accountState.accountAddress, 10)}`);
+
+      // Step 2: Building initCode with ML-DSA-65 validator
+      const step2 = document.getElementById('deploy-step-2');
+      step2.classList.add('active');
+      await mockDelay(600, 1000);
+      step2.classList.remove('active');
+      step2.classList.add('done');
+      step2.querySelector('.step-indicator').textContent = '\u2713';
+      log('[Kernel] initCode built — ML-DSA-65 validator plugin attached');
+
+      // Step 3: Submitting to bundler
+      const step3 = document.getElementById('deploy-step-3');
+      step3.classList.add('active');
+      await mockDelay(1000, 1800);
+      accountState.deployTxHash = mockTxHash();
+      step3.classList.remove('active');
+      step3.classList.add('done');
+      step3.querySelector('.step-indicator').textContent = '\u2713';
+      log(`[Kernel] Deployment UserOp submitted: ${truncate(accountState.deployTxHash, 10)}`);
+
+      // Step 4: Waiting for confirmation
+      const step4 = document.getElementById('deploy-step-4');
+      step4.classList.add('active');
+      await mockDelay(1500, 2500);
+      step4.classList.remove('active');
+      step4.classList.add('done');
+      step4.querySelector('.step-indicator').textContent = '\u2713';
+
+      accountState.deployed = true;
+      accountState.deployedAt = Date.now();
+      save4337State();
+
+      log(`[Kernel] Account deployed at ${truncate(accountState.accountAddress, 10)}`, 'success');
+
+      updateWalletUI();
+      updateNavGuards();
+    }
+
+    async function requestFaucet(amountWei) {
+      log(`[Kernel] Requesting faucet: ${formatEth(amountWei)}`);
+      await mockDelay(500, 1000);
+
+      const txHash = mockTxHash();
+      accountState.balance = (BigInt(accountState.balance) + BigInt(amountWei)).toString();
+      accountState.faucetTxHashes.push({ hash: txHash, amount: amountWei, timestamp: Date.now() });
+      save4337State();
+
+      updateWalletUI();
+      updateNavGuards();
+      log(`[Kernel] Received ${formatEth(amountWei)} — Balance: ${formatEth(accountState.balance)}`, 'success');
+      showToast(`Received ${formatEth(amountWei)}`);
+    }
+
+    // ── Send Transaction ──
+    function buildUserOp() {
+      const to = document.getElementById('sendTo').value;
+      const amountStr = document.getElementById('sendAmount').value;
+      const calldata = document.getElementById('sendCalldata').value || '0x';
+
+      if (!to || !to.startsWith('0x') || to.length !== 42) {
+        showToast('Invalid recipient address', true);
+        return;
+      }
+
+      const amountEth = parseFloat(amountStr);
+      if (isNaN(amountEth) || amountEth <= 0) {
+        showToast('Invalid amount', true);
+        return;
+      }
+
+      const amountWei = BigInt(Math.floor(amountEth * 1e18));
+      if (amountWei > BigInt(accountState.balance)) {
+        showToast('Insufficient balance', true);
+        return;
+      }
+
+      const gas = mockGasEstimates();
+      const userOpHash = mockTxHash();
+
+      pendingUserOp = {
+        sender: accountState.accountAddress,
+        nonce: accountState.nextNonce,
+        to: to,
+        value: amountWei.toString(),
+        calldata: calldata,
+        userOpHash: userOpHash,
+        gas: gas,
+        chainId: accountState.chainId,
+      };
+
+      // Show preview
+      const details = document.getElementById('sendPreviewDetails');
+      const gasCost = estimateGasCost(gas);
+      details.innerHTML = `
+        <div class="tx-row"><span class="tx-label">Sender</span><span class="tx-value" style="font-size:10px">${truncate(pendingUserOp.sender, 10)}</span></div>
+        <div class="tx-row"><span class="tx-label">Nonce</span><span class="tx-value">${pendingUserOp.nonce}</span></div>
+        <div class="tx-row"><span class="tx-label">To</span><span class="tx-value" style="font-size:10px">${truncate(to, 10)}</span></div>
+        <div class="tx-row"><span class="tx-label">Value</span><span class="tx-value">${amountStr} ETH</span></div>
+        <div class="tx-row"><span class="tx-label">Chain</span><span class="tx-value">${chainName(accountState.chainId)}</span></div>
+        <div class="tx-row"><span class="tx-label">UserOp Hash</span><span class="tx-value" style="font-size:10px">${truncate(userOpHash, 10)}</span></div>
+        <div class="tx-row"><span class="tx-label">Call Gas</span><span class="tx-value">${Number(gas.callGasLimit).toLocaleString()}</span></div>
+        <div class="tx-row"><span class="tx-label">Verification Gas</span><span class="tx-value">${Number(gas.verificationGasLimit).toLocaleString()}</span></div>
+        <div class="tx-row"><span class="tx-label">Max Fee</span><span class="tx-value">${(Number(gas.maxFeePerGas) / 1e9).toFixed(2)} gwei</span></div>
+        <div class="tx-row"><span class="tx-label">Est. Cost</span><span class="tx-value">${formatEth(gasCost)}</span></div>
+      `;
+
+      document.getElementById('send-builder').style.display = 'none';
+      document.getElementById('send-preview').style.display = '';
+      log(`[Kernel] UserOp built: ${truncate(userOpHash, 10)}`);
+    }
+
+    function cancelUserOp() {
+      pendingUserOp = null;
+      document.getElementById('send-preview').style.display = 'none';
+      document.getElementById('send-builder').style.display = '';
+    }
+
+    async function submitUserOp() {
+      if (!pendingUserOp) return;
+
+      document.getElementById('send-preview').style.display = 'none';
+      document.getElementById('send-progress').style.display = '';
+
+      // Reset steps
+      for (let i = 1; i <= 4; i++) {
+        const step = document.getElementById(`send-step-${i}`);
+        step.classList.remove('active', 'done');
+        step.querySelector('.step-indicator').textContent = i;
+      }
+
+      log('[Kernel] Submitting UserOp...');
+
+      // Step 1: Gas estimation (mocked)
+      const step1 = document.getElementById('send-step-1');
+      step1.classList.add('active');
+      await mockDelay(500, 900);
+      step1.classList.remove('active');
+      step1.classList.add('done');
+      step1.querySelector('.step-indicator').textContent = '\u2713';
+      log('[Kernel] Gas estimated');
+
+      // Step 2: REAL ML-DSA signing
+      const step2 = document.getElementById('send-step-2');
+      step2.classList.add('active');
+      let signResult;
+      try {
+        signResult = await invokeSnap('pq_signUserOp', {
+          userOpHash: pendingUserOp.userOpHash,
+          chainId: pendingUserOp.chainId
+        });
+      } catch (err) {
+        step2.classList.remove('active');
+        document.getElementById('send-progress').style.display = 'none';
+        document.getElementById('send-builder').style.display = '';
+        showToast('Signing rejected: ' + err.message, true);
+        log(`[Kernel] Signing failed: ${err.message}`, 'error');
+        pendingUserOp = null;
+        return;
+      }
+      step2.classList.remove('active');
+      step2.classList.add('done');
+      step2.querySelector('.step-indicator').textContent = '\u2713';
+      log(`[Kernel] Signed with ML-DSA-65, nonce ${signResult.nonce}`, 'success');
+      await getInfo(true);
+
+      // Step 3: Bundler submission (mocked)
+      const step3 = document.getElementById('send-step-3');
+      step3.classList.add('active');
+      await mockDelay(800, 1500);
+      const bundlerTxHash = mockTxHash();
+      step3.classList.remove('active');
+      step3.classList.add('done');
+      step3.querySelector('.step-indicator').textContent = '\u2713';
+      log(`[Kernel] Bundler tx: ${truncate(bundlerTxHash, 10)}`);
+
+      // Step 4: Receipt (mocked)
+      const step4 = document.getElementById('send-step-4');
+      step4.classList.add('active');
+      await mockDelay(1200, 2000);
+      const blockNumber = mockBlockNumber();
+      const gasUsed = (50000 + Math.floor(Math.random() * 30000)).toString();
+      step4.classList.remove('active');
+      step4.classList.add('done');
+      step4.querySelector('.step-indicator').textContent = '\u2713';
+
+      // Record transaction
+      const tx = {
+        id: accountState.transactions.length + 1,
+        to: pendingUserOp.to,
+        value: pendingUserOp.value,
+        userOpHash: pendingUserOp.userOpHash,
+        signature: truncate(signResult.signature, 20),
+        bundlerTxHash: bundlerTxHash,
+        blockNumber: blockNumber,
+        status: 'confirmed',
+        timestamp: Date.now(),
+        chainId: pendingUserOp.chainId,
+        gasUsed: gasUsed,
+        gasCost: estimateGasCost(pendingUserOp.gas),
+      };
+
+      accountState.transactions.push(tx);
+      accountState.balance = (BigInt(accountState.balance) - BigInt(pendingUserOp.value) - BigInt(tx.gasCost)).toString();
+      if (BigInt(accountState.balance) < 0n) accountState.balance = '0';
+      accountState.nextNonce++;
+      save4337State();
+
+      // Show receipt
+      document.getElementById('send-progress').style.display = 'none';
+      document.getElementById('send-receipt').style.display = '';
+
+      const receiptDetails = document.getElementById('receiptDetails');
+      receiptDetails.innerHTML = `
+        <div class="tx-row"><span class="tx-label">Status</span><span class="tx-value" style="color:var(--success)">Confirmed</span></div>
+        <div class="tx-row"><span class="tx-label">To</span><span class="tx-value" style="font-size:10px">${truncate(tx.to, 10)}</span></div>
+        <div class="tx-row"><span class="tx-label">Value</span><span class="tx-value">${formatEth(tx.value)}</span></div>
+        <div class="tx-row"><span class="tx-label">Block</span><span class="tx-value">#${tx.blockNumber.toLocaleString()}</span></div>
+        <div class="tx-row"><span class="tx-label">UserOp Hash</span><span class="tx-value" style="font-size:10px">${truncate(tx.userOpHash, 10)}</span></div>
+        <div class="tx-row"><span class="tx-label">TX Hash</span><span class="tx-value" style="font-size:10px">${truncate(tx.bundlerTxHash, 10)}</span></div>
+        <div class="tx-row"><span class="tx-label">Gas Used</span><span class="tx-value">${Number(tx.gasUsed).toLocaleString()}</span></div>
+        <div class="tx-row"><span class="tx-label">Signed With</span><span class="tx-value">ML-DSA-65 (PQ)</span></div>
+      `;
+
+      document.getElementById('receiptExplorerLink').href = explorerUrl(tx.chainId, 'tx', tx.bundlerTxHash);
+
+      updateWalletUI();
+      updateNavGuards();
+      log(`[Kernel] TX confirmed in block #${tx.blockNumber}`, 'success');
+      pendingUserOp = null;
+    }
+
+    function newTransaction() {
+      hideSendFlow();
+    }
+
+    // ── Buy ──
+    async function executeBuy() {
+      if (!isConnected || !hasKeypair) { showResult('buyResult', 'Connect snap and create a keypair first', true); return; }
+      if (!accountState.deployed) { showResult('buyResult', 'Deploy your smart wallet first', true); return; }
+      const usd = parseFloat(document.getElementById('buyAmount').value);
+      if (isNaN(usd) || usd <= 0) { showToast('Enter a valid amount', true); return; }
+      const ethAmount = usd / 2500; // mock rate
+      const provider = document.getElementById('buyProvider').value;
+      document.getElementById('buyReceive').value = ethAmount.toFixed(6);
+      log(`[BUY] Purchasing ${ethAmount.toFixed(6)} ETH for $${usd} via ${provider}`);
+      try {
+        const fakeHash = mockTxHash();
+        await mockDelay(500, 800);
+        const result = await invokeSnap('pq_signUserOp', { userOpHash: fakeHash, chainId: accountState.chainId });
+        await mockDelay(800, 1500);
+        const amountWei = BigInt(Math.floor(ethAmount * 1e18));
+        accountState.balance = (BigInt(accountState.balance) + amountWei).toString();
+        accountState.faucetTxHashes.push({ hash: mockTxHash(), amount: amountWei.toString(), timestamp: Date.now() });
+        save4337State();
+        updateWalletUI();
+        showResult('buyResult', { status: 'confirmed', provider, usd: '$' + usd, received: ethAmount.toFixed(6) + ' ETH', nonce: result.nonce });
+        log(`[BUY] Received ${ethAmount.toFixed(6)} ETH`, 'success');
+        await getInfo(true);
+      } catch (err) { showResult('buyResult', err.message, true); log(`[BUY] Error: ${err.message}`, 'error'); }
+    }
+
+    // ── Swap ──
+    async function executeSwap() {
+      if (!isConnected || !hasKeypair) { showResult('swapResult', 'Connect snap and create a keypair first', true); return; }
+      if (!accountState.deployed) { showResult('swapResult', 'Deploy your smart wallet first', true); return; }
+      const fromAmount = parseFloat(document.getElementById('swapFromAmount').value);
+      const toToken = document.getElementById('swapToToken').value;
+      if (isNaN(fromAmount) || fromAmount <= 0) { showToast('Enter a valid amount', true); return; }
+      const rates = { USDC: 2500, DAI: 2500, WBTC: 0.038 };
+      const toAmount = fromAmount * rates[toToken];
+      document.getElementById('swapToAmount').value = toAmount.toFixed(toToken === 'WBTC' ? 6 : 2);
+      document.getElementById('swapRate').textContent = `1 ETH = ${rates[toToken]} ${toToken}`;
+      document.getElementById('swapRoute').textContent = 'Uniswap V3 → ' + toToken;
+      document.getElementById('swapQuote').style.display = '';
+      log(`[SWAP] Swapping ${fromAmount} ETH → ${toAmount.toFixed(2)} ${toToken}`);
+      try {
+        const fakeHash = mockTxHash();
+        await mockDelay(500, 800);
+        const result = await invokeSnap('pq_signUserOp', { userOpHash: fakeHash, chainId: accountState.chainId });
+        await mockDelay(1000, 1800);
+        const weiCost = BigInt(Math.floor(fromAmount * 1e18));
+        if (weiCost <= BigInt(accountState.balance)) {
+          accountState.balance = (BigInt(accountState.balance) - weiCost).toString();
+          save4337State();
+          updateWalletUI();
+        }
+        showResult('swapResult', { status: 'confirmed', from: fromAmount + ' ETH', to: toAmount.toFixed(2) + ' ' + toToken, route: 'Uniswap V3', nonce: result.nonce });
+        log(`[SWAP] Swapped ${fromAmount} ETH → ${toAmount.toFixed(2)} ${toToken}`, 'success');
+        await getInfo(true);
+      } catch (err) { showResult('swapResult', err.message, true); log(`[SWAP] Error: ${err.message}`, 'error'); }
+    }
+
+    // ── Bridge ──
+    async function executeBridge() {
+      if (!isConnected || !hasKeypair) { showResult('bridgeResult', 'Connect snap and create a keypair first', true); return; }
+      if (!accountState.deployed) { showResult('bridgeResult', 'Deploy your smart wallet first', true); return; }
+      const amount = parseFloat(document.getElementById('bridgeAmount').value);
+      const fromChain = parseInt(document.getElementById('bridgeFrom').value);
+      const toChain = parseInt(document.getElementById('bridgeTo').value);
+      if (isNaN(amount) || amount <= 0) { showToast('Enter a valid amount', true); return; }
+      if (fromChain === toChain) { showToast('Select different networks', true); return; }
+      const fee = amount * 0.003;
+      const receive = amount - fee;
+      document.getElementById('bridgeReceive').textContent = receive.toFixed(6) + ' ETH';
+      document.getElementById('bridgeFee').textContent = fee.toFixed(6) + ' ETH';
+      document.getElementById('bridgeTime').textContent = '~2-5 min';
+      document.getElementById('bridgeQuote').style.display = '';
+      log(`[BRIDGE] Bridging ${amount} ETH from ${chainName(fromChain)} → ${chainName(toChain)}`);
+      try {
+        const fakeHash = mockTxHash();
+        await mockDelay(500, 800);
+        const result = await invokeSnap('pq_signUserOp', { userOpHash: fakeHash, chainId: fromChain });
+        await mockDelay(1500, 2500);
+        showResult('bridgeResult', { status: 'confirmed', from: chainName(fromChain), to: chainName(toChain), sent: amount + ' ETH', received: receive.toFixed(6) + ' ETH', fee: fee.toFixed(6) + ' ETH', nonce: result.nonce });
+        log(`[BRIDGE] Bridged ${amount} ETH to ${chainName(toChain)}`, 'success');
+        await getInfo(true);
+      } catch (err) { showResult('bridgeResult', err.message, true); log(`[BRIDGE] Error: ${err.message}`, 'error'); }
+    }
+
+    // ── Stake ──
+    async function executeStake() {
+      if (!isConnected || !hasKeypair) { showResult('stakeResult', 'Connect snap and create a keypair first', true); return; }
+      if (!accountState.deployed) { showResult('stakeResult', 'Deploy your smart wallet first', true); return; }
+      const amount = parseFloat(document.getElementById('stakeAmount').value);
+      const provider = document.getElementById('stakeProvider').value;
+      if (isNaN(amount) || amount <= 0) { showToast('Enter a valid amount', true); return; }
+      const stEthAmount = amount * 0.998; // slight rate
+      document.getElementById('stakeReceive').value = stEthAmount.toFixed(6);
+      log(`[STAKE] Staking ${amount} ETH via ${provider}`);
+      try {
+        const fakeHash = mockTxHash();
+        await mockDelay(500, 800);
+        const result = await invokeSnap('pq_signUserOp', { userOpHash: fakeHash, chainId: accountState.chainId });
+        await mockDelay(1000, 1800);
+        const weiCost = BigInt(Math.floor(amount * 1e18));
+        if (weiCost <= BigInt(accountState.balance)) {
+          accountState.balance = (BigInt(accountState.balance) - weiCost).toString();
+          save4337State();
+          updateWalletUI();
+        }
+        document.getElementById('stakeStaked').textContent = amount.toFixed(4) + ' ETH';
+        document.getElementById('stakeRewards').textContent = (amount * 0.032 / 365 * 7).toFixed(6) + ' ETH';
+        showResult('stakeResult', { status: 'confirmed', staked: amount + ' ETH', received: stEthAmount.toFixed(6) + ' stETH', provider, apy: '3.2%', nonce: result.nonce });
+        log(`[STAKE] Staked ${amount} ETH via ${provider}`, 'success');
+        await getInfo(true);
+      } catch (err) { showResult('stakeResult', err.message, true); log(`[STAKE] Error: ${err.message}`, 'error'); }
+    }
+
+    // ── Onboarding ──
+    const ONBOARDING_STEPS = ['welcome', 'connect', 'keygen', 'backup', 'sign', 'deploy', 'done'];
+    const PROGRESS_STEPS = ['connect', 'keygen', 'backup', 'sign', 'deploy'];
+
+    function showOnboardingStep(step) {
+      document.querySelectorAll('.onboarding-step').forEach(s => s.classList.remove('active'));
+      const stepEl = document.getElementById(`ob-${step}`);
+      if (stepEl) stepEl.classList.add('active');
+
+      // Progress bar visibility
+      const progress = document.getElementById('onboardingProgress');
+      const showProgress = PROGRESS_STEPS.includes(step);
+      progress.classList.toggle('hidden', !showProgress);
+
+      // Update progress dots
+      if (showProgress) {
+        const currentIdx = PROGRESS_STEPS.indexOf(step);
+        PROGRESS_STEPS.forEach((s, i) => {
+          const dot = document.getElementById(`prog-${s}`);
+          const line = document.getElementById(`line-${i + 1}`);
+          dot.classList.remove('active', 'completed');
+          if (i < currentIdx) {
+            dot.classList.add('completed');
+          } else if (i === currentIdx) {
+            dot.classList.add('active');
+          }
+          if (line) {
+            line.classList.toggle('completed', i < currentIdx);
+          }
+        });
+      }
+    }
+
+    function advanceOnboarding(nextState) {
+      onboardingState = nextState;
+      localStorage.setItem('pq-onboarding', nextState);
+      showOnboardingStep(nextState);
+    }
+
+    function finishOnboarding() {
+      onboardingState = 'complete';
+      localStorage.setItem('pq-onboarding', 'complete');
+      const overlay = document.getElementById('onboardingOverlay');
+      overlay.classList.add('hidden');
+      setTimeout(() => { overlay.style.display = 'none'; }, 400);
+      enterWalletMode();
+    }
+
+    function resetOnboarding() {
+      localStorage.removeItem('pq-onboarding');
+      localStorage.setItem('pq-onboarding-reset', '1');
+      reset4337State();
+      location.reload();
+    }
+
+    // Onboarding step handlers
+    async function onboardingConnect() {
+      const btn = document.getElementById('ob-connect-btn');
+      btn.disabled = true;
+      btn.textContent = 'Connecting...';
+      try {
+        await ethereum.request({
+          method: 'wallet_requestSnaps',
+          params: { [SNAP_ID]: {} }
+        });
+        updateStatus(true);
+        log('Snap connected', 'success');
+
+        // Check existing state
+        try {
+          const info = await invokeSnap('pq_getInfo');
+          updateSidebar(info);
+        } catch (e) { /* no key yet */ }
+
+        advanceOnboarding('keygen');
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Connect PQ Wallet';
+        const dot = document.getElementById('ob-mm-dot');
+        const text = document.getElementById('ob-mm-text');
+        dot.className = 'ob-status-dot not-detected';
+        text.textContent = 'Connection failed: ' + err.message;
+        log(`Connection failed: ${err.message}`, 'error');
+      }
+    }
+
+    async function onboardingKeygen() {
+      const btn = document.getElementById('ob-keygen-btn');
+      const icon = document.getElementById('ob-keygen-icon');
+      const text = document.getElementById('ob-keygen-text');
+      const pk = document.getElementById('ob-keygen-pk');
+
+      btn.disabled = true;
+      btn.textContent = 'Generating...';
+      icon.classList.add('generating');
+      text.textContent = 'Generating keypair...';
+
+      try {
+        const result = await invokeSnap('pq_getPublicKey', { create: true });
+        icon.classList.remove('generating');
+        icon.classList.add('done');
+        icon.innerHTML = '&#10003;';
+        text.textContent = 'Keypair created';
+        pk.textContent = truncate(result.publicKey, 24);
+        hasKeypair = true;
+        updateNavGuards();
+        log(`Public key: ${truncate(result.publicKey, 16)}`, 'success');
+        await getInfo(true);
+
+        setTimeout(() => advanceOnboarding('backup'), 1500);
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Create Key';
+        icon.classList.remove('generating');
+        text.textContent = 'Generation failed: ' + err.message;
+        log(`Error: ${err.message}`, 'error');
+      }
+    }
+
+    async function onboardingBackup() {
+      const password = document.getElementById('ob-backup-password').value;
+      if (password.length < 8) {
+        showToast('Password must be at least 8 characters', true);
+        return;
+      }
+      const btn = document.getElementById('ob-backup-btn');
+      btn.disabled = true;
+      btn.textContent = 'Exporting...';
+
+      try {
+        const result = await invokeSnap('pq_exportKey', { password });
+        navigator.clipboard.writeText(result.backup);
+        btn.textContent = 'Copied to clipboard';
+        log('Backup exported and copied', 'success');
+        showToast('Backup copied to clipboard');
+
+        // Change skip button to Continue with primary style
+        const skipBtn = document.getElementById('ob-backup-skip');
+        skipBtn.textContent = 'Continue';
+        skipBtn.classList.add('primary');
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Export Backup';
+        showToast(err.message, true);
+        log(`Error: ${err.message}`, 'error');
+      }
+    }
+
+    async function onboardingSign() {
+      const btn = document.getElementById('ob-sign-btn');
+      btn.disabled = true;
+      btn.textContent = 'Signing...';
+
+      try {
+        const message = toHex('Hello, post-quantum world!');
+        const result = await invokeSnap('pq_signMessage', { message });
+        btn.style.display = 'none';
+
+        const resultEl = document.getElementById('ob-sign-result');
+        resultEl.style.display = 'flex';
+        document.getElementById('ob-sign-text').textContent =
+          `Signed with nonce ${result.nonce} (${(result.signature.length - 2) / 2} bytes)`;
+
+        log(`Signed with nonce ${result.nonce}`, 'success');
+        await getInfo(true);
+
+        setTimeout(() => advanceOnboarding('deploy'), 1500);
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Sign Test Message';
+        showToast(err.message, true);
+        log(`Error: ${err.message}`, 'error');
+      }
+    }
+
+    async function onboardingDeploy() {
+      const btn = document.getElementById('ob-deploy-btn');
+      const skipBtn = document.getElementById('ob-deploy-skip');
+      btn.disabled = true;
+      btn.textContent = 'Deploying...';
+      skipBtn.style.display = 'none';
+
+      accountState.chainId = parseInt(document.getElementById('ob-deploy-network').value);
+
+      const stepsEl = document.getElementById('ob-deploy-steps');
+      stepsEl.style.display = '';
+
+      log(`[Kernel] Deploying Kernel account on ${chainName(accountState.chainId)}...`);
+
+      // Step 1: KernelFactory counterfactual address
+      const step1 = document.getElementById('ob-deploy-step-1');
+      step1.classList.add('active');
+      await mockDelay(800, 1200);
+      const info = await getInfo(true);
+      const pubKeyPrefix = info && info.publicKeyPrefix ? info.publicKeyPrefix : '0x0000';
+      accountState.accountAddress = mockAddress(pubKeyPrefix);
+      step1.classList.remove('active');
+      step1.classList.add('done');
+      step1.querySelector('.step-indicator').textContent = '\u2713';
+
+      // Step 2: initCode with ML-DSA-65 validator
+      const step2 = document.getElementById('ob-deploy-step-2');
+      step2.classList.add('active');
+      await mockDelay(600, 1000);
+      step2.classList.remove('active');
+      step2.classList.add('done');
+      step2.querySelector('.step-indicator').textContent = '\u2713';
+
+      // Step 3: Submit to bundler
+      const step3 = document.getElementById('ob-deploy-step-3');
+      step3.classList.add('active');
+      await mockDelay(1000, 1800);
+      accountState.deployTxHash = mockTxHash();
+      step3.classList.remove('active');
+      step3.classList.add('done');
+      step3.querySelector('.step-indicator').textContent = '\u2713';
+
+      // Step 4: Confirmation
+      const step4 = document.getElementById('ob-deploy-step-4');
+      step4.classList.add('active');
+      await mockDelay(1500, 2500);
+      step4.classList.remove('active');
+      step4.classList.add('done');
+      step4.querySelector('.step-indicator').textContent = '\u2713';
+
+      accountState.deployed = true;
+      accountState.deployedAt = Date.now();
+      save4337State();
+      updateNavGuards();
+
+      log(`[Kernel] Account deployed at ${truncate(accountState.accountAddress, 10)}`, 'success');
+
+      btn.style.display = 'none';
+      const resultEl = document.getElementById('ob-deploy-result');
+      resultEl.style.display = 'flex';
+      document.getElementById('ob-deploy-text').textContent =
+        `Deployed to ${truncate(accountState.accountAddress, 10)} on ${chainName(accountState.chainId)}`;
+
+      setTimeout(() => advanceOnboarding('done'), 2000);
+    }
+
+    function checkMetaMaskStatus() {
+      const dot = document.getElementById('ob-mm-dot');
+      const text = document.getElementById('ob-mm-text');
+      if (typeof window.ethereum !== 'undefined') {
+        dot.className = 'ob-status-dot detected';
+        text.textContent = 'MetaMask detected';
+      } else {
+        dot.className = 'ob-status-dot not-detected';
+        text.textContent = 'MetaMask not detected — install MetaMask Flask';
+      }
+    }
+
+    // ── Wallet Mode ──
+    function enterWalletMode() {
+      document.body.classList.add('wallet-mode');
+      showPage('wallet');
+      updateWalletSidebar();
+      setWalletSidebarActive('wallet');
+    }
+
+    function walletNav(page) {
+      if (page === 'send') {
+        showPage('wallet');
+        if (accountState.deployed) showSendFlow();
+        setWalletSidebarActive('send');
+        return;
+      }
+      showPage(page);
+      setWalletSidebarActive(page);
+    }
+
+    function setWalletSidebarActive(page) {
+      const sidebar = document.getElementById('walletSidebar');
+      sidebar.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      const items = sidebar.querySelectorAll('.nav-item');
+      const devPages = ['sign', 'keys', 'backup', 'userop', 'batch', 'dapp', 'docs', 'about'];
+      const pageMap = {
+        wallet: 'Home', buy: 'Buy', send: 'Send', swap: 'Swap',
+        bridge: 'Bridge', stake: 'Stake', log: 'Activity',
+        sign: 'Sign Message', keys: 'Key Management', backup: 'Backup & Restore',
+        userop: 'Sign UserOp', dapp: 'Dapp Simulation', batch: 'Batch Operations',
+        docs: 'Documentation', about: 'About',
+      };
+      const label = pageMap[page];
+      items.forEach(item => {
+        if (item.textContent.trim() === label) item.classList.add('active');
+      });
+      // Auto-open/close developer disclosure
+      const disclosure = sidebar.querySelector('.dev-disclosure');
+      if (disclosure) {
+        disclosure.open = devPages.includes(page);
+      }
+    }
+
+    function updateWalletSidebar() {
+      const addr = document.getElementById('walletSidebarAddr');
+      const bal = document.getElementById('walletSidebarBalance');
+      const net = document.getElementById('walletSidebarNetwork');
+      if (accountState.deployed && accountState.accountAddress) {
+        addr.textContent = truncate(accountState.accountAddress, 8);
+        addr.classList.remove('none');
+        bal.textContent = formatEth(accountState.balance);
+        net.textContent = chainName(accountState.chainId);
+      } else {
+        addr.textContent = 'Not deployed';
+        addr.classList.add('none');
+        bal.textContent = '';
+        net.textContent = 'No network';
+      }
+      // Sync connection status
+      document.getElementById('walletStatusDot').className = document.getElementById('statusDot').className;
+      document.getElementById('walletStatusText').textContent = document.getElementById('statusText').textContent;
+    }
+
+
+    // ── Init ──
+    window.addEventListener('load', async () => {
+      // Load persisted 4337 state
+      load4337State();
+
+      // Check MetaMask status for onboarding connect step
+      checkMetaMaskStatus();
+
+      // Validate stored onboarding state against actual snap state
+      let snapConnected = false;
+      let snapHasKey = false;
+
+      try {
+        const snaps = await ethereum.request({ method: 'wallet_getSnaps' });
+        if (snaps[SNAP_ID]) {
+          snapConnected = true;
+          updateStatus(true);
+          log('Snap already connected', 'success');
+
+          const info = await invokeSnap('pq_getInfo');
+          updateSidebar(info);
+          if (info && info.hasKeypair) {
+            snapHasKey = true;
+          }
+        }
+      } catch (err) {
+        log('MetaMask Flask not detected', 'error');
+      }
+
+      // State reconciliation — skip if user just explicitly reset
+      const justReset = localStorage.getItem('pq-onboarding-reset');
+      if (justReset) {
+        localStorage.removeItem('pq-onboarding-reset');
+      } else if (snapConnected && snapHasKey && onboardingState !== 'complete') {
+        // User already has everything set up — skip to complete
+        onboardingState = 'complete';
+        localStorage.setItem('pq-onboarding', 'complete');
+      }
+      if (onboardingState === 'complete' && !snapConnected) {
+        // Stored as complete but snap not connected — reset
+        onboardingState = 'welcome';
+        localStorage.setItem('pq-onboarding', 'welcome');
+      }
+
+      updateNavGuards();
+
+      if (onboardingState === 'complete') {
+        // Hide overlay, enter wallet mode
+        const overlay = document.getElementById('onboardingOverlay');
+        overlay.style.display = 'none';
+        enterWalletMode();
+      } else {
+        // Show onboarding at current step
+        showOnboardingStep(onboardingState);
+      }
+    });
+  </script>
+</body>
+</html>
